@@ -4,11 +4,15 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
+import AvatarSelector from "../components/common/AvatarSelector";
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [editing, setEditing] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(
+    user?.profilePicture || "/uploads/avatars/default-avatar.png",
+  );
   const {
     register,
     handleSubmit,
@@ -22,10 +26,10 @@ const Profile = () => {
 
   const onSubmit = async (data) => {
     try {
-      await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`,
-        data,
-      );
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/users/profile`, {
+        ...data,
+        profilePicture: selectedAvatar,
+      });
       toast.success("Profile updated successfully");
       setEditing(false);
     } catch (error) {
@@ -50,7 +54,7 @@ const Profile = () => {
           <div className="flex items-center space-x-4">
             {user.profilePicture ? (
               <img
-                src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePicture}`}
+                src={`${import.meta.env.VITE_BACKEND_URL}${selectedAvatar}`}
                 alt={user.name}
                 className="w-20 h-20 rounded-full object-cover border-2 border-primary"
               />
@@ -151,6 +155,12 @@ const Profile = () => {
                   )}
                 </div>
 
+                {/* Avatar selector in edit mode */}
+                <AvatarSelector
+                  selectedAvatar={selectedAvatar}
+                  onSelect={setSelectedAvatar}
+                />
+
                 <div className="flex space-x-4">
                   <button
                     type="submit"
@@ -160,7 +170,10 @@ const Profile = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditing(false)}
+                    onClick={() => {
+                      setEditing(false);
+                      setSelectedAvatar(user.profilePicture);
+                    }}
                     className="bg-[#2a2a2a] text-secondary px-6 py-2 rounded-lg hover:bg-[#3a3a3a] transition-colors"
                   >
                     Cancel
@@ -176,7 +189,6 @@ const Profile = () => {
             <p className="text-secondary">
               Your watchlist items will appear here
             </p>
-            {/* You can add watchlist grid here */}
           </div>
         )}
 

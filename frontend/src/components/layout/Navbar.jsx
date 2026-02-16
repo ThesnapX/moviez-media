@@ -15,15 +15,21 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-darker border-b border-primary/20 sticky top-0 z-40">
+      <nav className="bg-transparent backdrop-blur-md border-b border-primary/20 sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link
-              to="/"
-              className="text-3xl font-bold text-primary glow-red-hover"
-            >
-              Moviez<span className="text-secondary">Media</span>
+            {/* Logo with softer glowing text effect */}
+            <Link to="/" className="group">
+              <h1 className="text-3xl font-['Bebas_Neue'] tracking-wider">
+                <span className="text-primary relative">
+                  Moviez
+                  <span className="absolute inset-0 blur-sm bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
+                </span>
+                <span className="text-white relative">
+                  Media
+                  <span className="absolute inset-0 blur-sm bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
+                </span>
+              </h1>
             </Link>
 
             {/* Navigation Links */}
@@ -60,9 +66,9 @@ const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Search movies..."
-                  className="w-full bg-[#1a1a1a] text-secondary pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full bg-white/5 backdrop-blur-sm text-secondary pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-white/10"
                 />
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary/60" />
               </div>
             </div>
 
@@ -93,7 +99,7 @@ const Navbar = () => {
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] rounded-lg shadow-xl border border-primary/20 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-xl border border-primary/20 py-2 z-50">
                       <div className="px-4 py-2 border-b border-secondary/20">
                         <p className="font-semibold text-secondary">
                           {user.name}

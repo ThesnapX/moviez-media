@@ -51,7 +51,7 @@
   box-shadow: 0 0 10px #f00000;
 }
 
-/* Glowing effects */
+/* Glow effects */
 .glow-red {
   box-shadow:
     0 0 10px #f00000,
@@ -62,6 +62,12 @@
   box-shadow:
     0 0 15px #f00000,
     0 0 30px rgba(240, 0, 0, 0.5);
+}
+
+/* Blur backdrop */
+.blur-backdrop {
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 /* Gradient overlays */
@@ -154,4 +160,31 @@
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Slide animations */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+/* Gradient overlay */
+.gradient-overlay {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.4) 60%,
+    transparent 100%
+  );
 }

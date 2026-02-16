@@ -7,27 +7,32 @@ const MovieCard = ({ movie }) => {
   const { user } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
   const [popupPosition, setPopupPosition] = useState({
-    side: "right", // 'left' or 'right'
+    side: "right",
     top: 0,
     show: false,
   });
 
   const cardRef = useRef(null);
   const popupRef = useRef(null);
-  const timeoutRef = useRef(null);
   const popupWidth = 320; // w-80 = 20rem = 320px
   const popupHeight = 400; // Approximate height
+  const isHoveringRef = useRef(false);
 
-  // Handle mouse enter with delay
+  // Handle mouse enter - INSTANT (no delay)
   const handleMouseEnter = () => {
-    timeoutRef.current = setTimeout(() => {
-      calculatePosition();
-    }, 300);
+    isHoveringRef.current = true;
+    calculatePosition();
+  };
+
+  // Handle mouse leave
+  const handleMouseLeave = () => {
+    isHoveringRef.current = false;
+    setPopupPosition((prev) => ({ ...prev, show: false }));
   };
 
   // Calculate popup position based on viewport
   const calculatePosition = () => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !isHoveringRef.current) return;
 
     const cardRect = cardRef.current.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -45,12 +50,12 @@ const MovieCard = ({ movie }) => {
 
     // Check bottom overflow
     if (top + popupHeight > viewportHeight) {
-      top = viewportHeight - popupHeight - 10; // 10px margin from bottom
+      top = viewportHeight - popupHeight - 10;
     }
 
     // Check top overflow
     if (top < 10) {
-      top = 10; // 10px margin from top
+      top = 10;
     }
 
     setPopupPosition({
@@ -60,18 +65,28 @@ const MovieCard = ({ movie }) => {
     });
   };
 
-  // Handle mouse leave
-  const handleMouseLeave = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setPopupPosition((prev) => ({ ...prev, show: false }));
-  };
+  // Handle scroll - hide popup when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (popupPosition.show) {
+        // Check if mouse is still over the card
+        if (!isHoveringRef.current) {
+          setPopupPosition((prev) => ({ ...prev, show: false }));
+        } else {
+          // Reposition if still hovering
+          calculatePosition();
+        }
+      }
+    };
 
-  // Handle resize to recalculate position
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [popupPosition.show]);
+
+  // Handle resize
   useEffect(() => {
     const handleResize = () => {
-      if (popupPosition.show) {
+      if (popupPosition.show && isHoveringRef.current) {
         calculatePosition();
       }
     };
@@ -80,28 +95,7 @@ const MovieCard = ({ movie }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, [popupPosition.show]);
 
-  // Handle scroll to reposition
-  useEffect(() => {
-    const handleScroll = () => {
-      if (popupPosition.show) {
-        calculatePosition();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, true);
-    return () => window.removeEventListener("scroll", handleScroll, true);
-  }, [popupPosition.show]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Handle click outside to close
+  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -111,6 +105,7 @@ const MovieCard = ({ movie }) => {
         !cardRef.current.contains(event.target)
       ) {
         setPopupPosition((prev) => ({ ...prev, show: false }));
+        isHoveringRef.current = false;
       }
     };
 
@@ -126,7 +121,7 @@ const MovieCard = ({ movie }) => {
   return (
     <div
       ref={cardRef}
-      className="relative group"
+      className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -138,11 +133,18 @@ const MovieCard = ({ movie }) => {
             `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical}`
           }
           alt={movie.title}
-          className="w-full h-[300px] object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-[300px] object-cover transition-transform duration-300"
+          style={{
+            transform: popupPosition.show ? "scale(1.1)" : "scale(1)",
+          }}
         />
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${
+            popupPosition.show ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <div className="absolute bottom-2 left-2 right-2">
             <div className="flex items-center space-x-1 text-yellow-500 text-sm">
               <span>★</span>
@@ -165,7 +167,7 @@ const MovieCard = ({ movie }) => {
           style={{
             left:
               popupPosition.side === "right"
-                ? cardRef.current?.getBoundingClientRect().right + 16 // 16px gap
+                ? cardRef.current?.getBoundingClientRect().right + 16
                 : cardRef.current?.getBoundingClientRect().left -
                   popupWidth -
                   16,
@@ -177,10 +179,8 @@ const MovieCard = ({ movie }) => {
           <div
             className="pointer-events-auto transform transition-all duration-200 ease-out"
             style={{
-              transform: popupPosition.show
-                ? "scale(1) translateY(0)"
-                : "scale(0.95) translateY(-10px)",
-              opacity: popupPosition.show ? 1 : 0,
+              transform: "scale(1) translateY(0)",
+              opacity: 1,
               transformOrigin: getTransformOrigin(),
             }}
           >
@@ -288,7 +288,7 @@ const MovieCard = ({ movie }) => {
                 </div>
               </div>
 
-              {/* Arrow pointer - positioned based on side */}
+              {/* Arrow pointer */}
               <div
                 className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-xl border-t border-l border-white/10 transform rotate-45 ${
                   popupPosition.side === "right" ? "-left-1.5" : "-right-1.5"

@@ -2,12 +2,24 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-darker border-t border-primary/20 py-12">
+    <footer className="bg-transparent backdrop-blur-md border-t border-primary/20 py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-4 gap-8">
-          {/* About */}
+          {/* About with logo */}
           <div>
-            <h3 className="text-2xl mb-4 text-primary">MoviezMedia</h3>
+            {/* Logo with softer glowing text effect */}
+            <Link to="/" className="group">
+              <h1 className="text-3xl font-['Bebas_Neue'] tracking-wider">
+                <span className="text-primary relative">
+                  Moviez
+                  <span className="absolute inset-0 blur-sm bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
+                </span>
+                <span className="text-white relative">
+                  Media
+                  <span className="absolute inset-0 blur-sm bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
+                </span>
+              </h1>
+            </Link>
             <p className="text-secondary/60 text-sm">
               Your ultimate destination for downloading movies, TV series, and
               anime. Fast, free, and secure downloads.
@@ -16,7 +28,9 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg mb-4 text-secondary">Quick Links</h4>
+            <h4 className="text-lg mb-4 text-secondary font-['Bebas_Neue'] tracking-wider">
+              Quick Links
+            </h4>
             <ul className="space-y-2 text-secondary/60">
               <li>
                 <Link
@@ -55,7 +69,9 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h4 className="text-lg mb-4 text-secondary">Support</h4>
+            <h4 className="text-lg mb-4 text-secondary font-['Bebas_Neue'] tracking-wider">
+              Support
+            </h4>
             <ul className="space-y-2 text-secondary/60">
               <li>
                 <Link
@@ -94,7 +110,9 @@ const Footer = () => {
 
           {/* Download App */}
           <div>
-            <h4 className="text-lg mb-4 text-secondary">Get Mobile App</h4>
+            <h4 className="text-lg mb-4 text-secondary font-['Bebas_Neue'] tracking-wider">
+              Get Mobile App
+            </h4>
             <p className="text-secondary/60 text-sm mb-4">
               Download our Android app for better experience
             </p>

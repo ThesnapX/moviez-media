@@ -7,6 +7,7 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import AvatarSelector from "./AvatarSelector";
 
 const AuthModal = () => {
   const {
@@ -22,8 +23,12 @@ const AuthModal = () => {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm();
   const [loading, setLoading] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(
+    "/uploads/avatars/default-avatar.png",
+  );
 
   if (!showAuthModal) return null;
 
@@ -33,7 +38,11 @@ const AuthModal = () => {
     if (authMode === "login") {
       await login(data.email, data.password);
     } else if (authMode === "register") {
-      await registerUser(data);
+      // Add selected avatar to registration data
+      await registerUser({
+        ...data,
+        profilePicture: selectedAvatar,
+      });
     } else if (authMode === "forgot") {
       await forgotPassword(data.email);
     }
@@ -71,22 +80,30 @@ const AuthModal = () => {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {authMode === "register" && (
-            <div>
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-                <input
-                  {...register("name", { required: "Name is required" })}
-                  type="text"
-                  placeholder="Full Name"
-                  className="w-full bg-[#2a2a2a] text-secondary pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+            <>
+              <div>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
+                  <input
+                    {...register("name", { required: "Name is required" })}
+                    type="text"
+                    placeholder="Full Name"
+                    className="w-full bg-[#2a2a2a] text-secondary pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-primary text-sm mt-1">
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
-              {errors.name && (
-                <p className="text-primary text-sm mt-1">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
+
+              {/* Avatar Selector for Registration */}
+              <AvatarSelector
+                selectedAvatar={selectedAvatar}
+                onSelect={setSelectedAvatar}
+              />
+            </>
           )}
 
           <div>
