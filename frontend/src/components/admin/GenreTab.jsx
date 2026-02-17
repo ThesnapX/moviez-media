@@ -10,7 +10,6 @@ const GenreTab = () => {
   const [editingGenre, setEditingGenre] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
   });
 
   useEffect(() => {
@@ -48,7 +47,7 @@ const GenreTab = () => {
       }
       setShowModal(false);
       setEditingGenre(null);
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "" });
       fetchGenres();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save genre");
@@ -73,7 +72,6 @@ const GenreTab = () => {
     setEditingGenre(genre);
     setFormData({
       name: genre.name,
-      description: genre.description || "",
     });
     setShowModal(true);
   };
@@ -93,7 +91,7 @@ const GenreTab = () => {
         <button
           onClick={() => {
             setEditingGenre(null);
-            setFormData({ name: "", description: "" });
+            setFormData({ name: "" });
             setShowModal(true);
           }}
           className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-[#d00000] transition-colors"
@@ -120,20 +118,8 @@ const GenreTab = () => {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="e.g., Action, Comedy, Drama"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-secondary mb-1">
-                  Description (Optional)
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows="3"
-                  className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="flex space-x-4 mt-6">
@@ -148,7 +134,7 @@ const GenreTab = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingGenre(null);
-                    setFormData({ name: "", description: "" });
+                    setFormData({ name: "" });
                   }}
                   className="flex-1 bg-[#2a2a2a] text-secondary py-2 rounded-lg hover:bg-[#3a3a3a] transition-colors"
                 >
@@ -165,32 +151,29 @@ const GenreTab = () => {
         {genres.map((genre) => (
           <div
             key={genre._id}
-            className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/20"
+            className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/20 hover:border-primary/40 transition-colors"
           >
             <div className="flex justify-between items-start">
-              <div>
-                <h4 className="text-lg font-semibold text-white">
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-white mb-1">
                   {genre.name}
                 </h4>
-                {genre.description && (
-                  <p className="text-secondary text-sm mt-1">
-                    {genre.description}
-                  </p>
-                )}
-                <p className="text-xs text-secondary/60 mt-2">
+                <p className="text-xs text-secondary/60">
                   Added: {new Date(genre.createdAt).toLocaleDateString()}
                 </p>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 ml-4">
                 <button
                   onClick={() => openEditModal(genre)}
-                  className="p-1 text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
+                  className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                  title="Edit genre"
                 >
                   <PencilIcon className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => handleDelete(genre._id)}
-                  className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                  className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                  title="Delete genre"
                 >
                   <TrashIcon className="w-5 h-5" />
                 </button>
@@ -199,6 +182,24 @@ const GenreTab = () => {
           </div>
         ))}
       </div>
+
+      {/* Empty State */}
+      {genres.length === 0 && !loading && (
+        <div className="text-center py-12 bg-[#2a2a2a] rounded-lg border border-primary/20">
+          <p className="text-secondary mb-4">No genres found</p>
+          <button
+            onClick={() => {
+              setEditingGenre(null);
+              setFormData({ name: "" });
+              setShowModal(true);
+            }}
+            className="inline-flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-[#d00000] transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>Add Your First Genre</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,10 +7,6 @@ const genreSchema = new mongoose.Schema({
     unique: true,
     trim: true,
   },
-  description: {
-    type: String,
-    default: "",
-  },
   createdAt: {
     type: Date,
     default: Date.now,
