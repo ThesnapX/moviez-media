@@ -11,21 +11,28 @@ import { useAuth } from "../../context/AuthContext";
 const HeroSlider = () => {
   const { spotlight } = useMovies();
   const { user } = useAuth();
+
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(null);
+  const [direction, setDirection] = useState("next");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   const [isSaved, setIsSaved] = useState(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const sliderRef = useRef(null);
-  const autoPlayRef = useRef(null);
 
+  const autoPlayRef = useRef(null);
+  const containerRef = useRef(null);
+
+  /* ================= AUTOPLAY ================= */
   useEffect(() => {
-    if (spotlight.length === 0) return;
+    if (!spotlight.length) return;
 
     startAutoPlay();
     return () => stopAutoPlay();
-  }, [spotlight.length, currentSlide]);
+  }, [currentSlide, spotlight.length]);
 
   const startAutoPlay = () => {
     stopAutoPlay();
@@ -37,217 +44,213 @@ const HeroSlider = () => {
   };
 
   const stopAutoPlay = () => {
-    if (autoPlayRef.current) {
-      clearInterval(autoPlayRef.current);
-    }
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+  };
+
+  /* ================= SLIDE CONTROLS ================= */
+  const changeSlide = (newIndex, dir) => {
+    if (isTransitioning || newIndex === currentSlide) return;
+
+    setDirection(dir);
+    setPrevSlide(currentSlide);
+    setIsTransitioning(true);
+    setCurrentSlide(newIndex);
+
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setPrevSlide(null);
+    }, 500);
   };
 
   const nextSlide = () => {
-    if (isTransitioning || spotlight.length === 0) return;
-    setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev + 1) % spotlight.length);
-    setTimeout(() => setIsTransitioning(false), 500);
+    const newIndex = (currentSlide + 1) % spotlight.length;
+    changeSlide(newIndex, "next");
   };
 
-  const prevSlide = () => {
-    if (isTransitioning || spotlight.length === 0) return;
-    setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev - 1 + spotlight.length) % spotlight.length);
-    setTimeout(() => setIsTransitioning(false), 500);
+  const prevSlideFn = () => {
+    const newIndex = (currentSlide - 1 + spotlight.length) % spotlight.length;
+    changeSlide(newIndex, "prev");
   };
 
   const goToSlide = (index) => {
-    if (isTransitioning || index === currentSlide) return;
-    setIsTransitioning(true);
-    setCurrentSlide(index);
-    setTimeout(() => setIsTransitioning(false), 500);
+    changeSlide(index, index > currentSlide ? "next" : "prev");
   };
 
-  // Mouse drag handlers
-  const handleMouseDown = (e) => {
+  /* ================= DRAG ================= */
+  const handleDragStart = (e) => {
     setIsDragging(true);
-    setStartX(e.clientX - dragOffset);
+    setStartX(e.clientX || e.touches?.[0].clientX);
     stopAutoPlay();
+    containerRef.current.style.cursor = "grabbing";
   };
 
-  const handleMouseMove = (e) => {
+  const handleDragMove = (e) => {
     if (!isDragging) return;
-    e.preventDefault();
-    const newOffset = e.clientX - startX;
-    const maxOffset = window.innerWidth * 0.3; // Max drag 30% of screen
-
-    // Limit drag offset
-    if (Math.abs(newOffset) < maxOffset) {
-      setDragOffset(newOffset);
-    }
+    const currentX = e.clientX || e.touches?.[0].clientX;
+    setDragOffset(currentX - startX);
   };
 
-  const handleMouseUp = () => {
+  const handleDragEnd = () => {
     if (!isDragging) return;
 
-    // Determine if we should change slide based on drag distance
-    if (Math.abs(dragOffset) > 100) {
-      if (dragOffset > 0) {
-        prevSlide();
-      } else {
-        nextSlide();
-      }
+    if (Math.abs(dragOffset) > 80) {
+      dragOffset > 0 ? prevSlideFn() : nextSlide();
     }
 
     setIsDragging(false);
     setDragOffset(0);
+    containerRef.current.style.cursor = "grab";
     startAutoPlay();
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      setDragOffset(0);
-      startAutoPlay();
-    }
   };
 
   if (!spotlight.length) return null;
 
-  const movie = spotlight[currentSlide];
-
-  // Calculate transform style for drag effect
-  const getSliderStyle = () => {
-    if (isDragging) {
+  const getSlideStyle = (index) => {
+    if (isDragging && index === currentSlide) {
       return {
-        transform: `translateX(${dragOffset}px) scale(${1 - Math.abs(dragOffset) * 0.001})`,
+        transform: `translateX(${dragOffset}px)`,
         transition: "none",
-        opacity: 1 - Math.abs(dragOffset) * 0.002,
       };
     }
-    return {
-      transform: "translateX(0) scale(1)",
-      transition: "all 0.5s ease-out",
-      opacity: 1,
-    };
+
+    if (!isTransitioning) {
+      return {
+        transform:
+          index === currentSlide ? "translateX(0)" : "translateX(100%)",
+      };
+    }
+
+    if (index === currentSlide) {
+      return {
+        transform: "translateX(0)",
+        transition: "transform 500ms ease",
+      };
+    }
+
+    if (index === prevSlide) {
+      return {
+        transform:
+          direction === "next" ? "translateX(-100%)" : "translateX(100%)",
+        transition: "transform 500ms ease",
+      };
+    }
+
+    return { transform: "translateX(100%)" };
   };
 
   return (
-    <div className="relative h-[600px] overflow-hidden">
-      {/* Slider Container */}
+    <div className="relative h-[600px] overflow-hidden bg-black">
       <div
-        ref={sliderRef}
-        className="relative w-full h-full cursor-grab active:cursor-grabbing"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        ref={containerRef}
+        className="relative w-full h-full select-none"
+        style={{ cursor: "grab" }}
+        onMouseDown={handleDragStart}
+        onMouseMove={handleDragMove}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchStart={handleDragStart}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
       >
-        {/* Slide */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${movie.posterHorizontal?.url || movie.posterHorizontal})`,
-            ...getSliderStyle(),
-          }}
-        >
-          <div className="absolute inset-0 gradient-overlay"></div>
-        </div>
-
-        {/* Content with slide animation */}
-        <div
-          className={`relative container mx-auto px-4 h-full flex items-center transition-all duration-500 ${
-            isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
-          }`}
-        >
-          <div className="w-full md:w-1/2">
-            <span className="text-primary font-semibold text-lg mb-2 block animate-slide-in-left">
-              #1 Spotlight
-            </span>
-            <h1
-              className="text-5xl md:text-6xl mb-4 text-white animate-slide-in-left"
-              style={{ animationDelay: "0.1s" }}
-            >
-              {movie.title}
-            </h1>
-
+        {/* SLIDES */}
+        {spotlight.map((movie, index) => (
+          <div
+            key={index}
+            className="absolute inset-0"
+            style={getSlideStyle(index)}
+          >
+            {/* Background */}
             <div
-              className="flex items-center space-x-4 mb-4 text-secondary animate-slide-in-left"
-              style={{ animationDelay: "0.2s" }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${movie?.posterHorizontal?.url || movie?.posterHorizontal})`,
+              }}
             >
-              <span>{movie.type?.replace("-", " ").toUpperCase()}</span>
-              <span>•</span>
-              <span>{new Date(movie.releaseDate).getFullYear()}</span>
-              <span>•</span>
-              <span className="text-yellow-500">★ {movie.imdbRating}</span>
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/80 to-transparent" />
             </div>
 
-            <p
-              className="text-secondary/80 mb-6 line-clamp-3 animate-slide-in-left"
-              style={{ animationDelay: "0.3s" }}
-            >
-              {movie.description}
-            </p>
+            {/* Content */}
+            <div className="relative container mx-auto px-4 h-full flex items-end md:items-center pb-16 md:pb-0">
+              <div className="w-full md:w-1/2">
+                <span className="text-primary font-semibold text-lg mb-2 block">
+                  #{index + 1} Spotlight
+                </span>
 
-            <div
-              className="flex items-center space-x-4 animate-slide-in-left"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <button className="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#d00000] transition-all glow-red-hover">
-                Download Now
-              </button>
+                <h1 className="text-4xl md:text-6xl mb-4 text-white">
+                  {movie?.title}
+                </h1>
 
-              {user && (
-                <button
-                  onClick={() => setIsSaved(!isSaved)}
-                  className="p-3 rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
-                >
-                  {isSaved ? (
-                    <BookmarkSolid className="w-6 h-6" />
-                  ) : (
-                    <BookmarkOutline className="w-6 h-6" />
+                <div className="flex items-center space-x-4 mb-4 text-secondary text-sm md:text-base">
+                  <span>{movie?.type?.replace("-", " ").toUpperCase()}</span>
+                  <span>•</span>
+                  <span>{new Date(movie?.releaseDate).getFullYear()}</span>
+                  <span>•</span>
+                  <span className="text-yellow-500">★ {movie?.imdbRating}</span>
+                </div>
+
+                <p className="text-secondary/80 mb-6 line-clamp-3 text-sm md:text-base">
+                  {movie?.description}
+                </p>
+
+                <div className="flex items-center space-x-4">
+                  <button className="bg-primary text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-[#d00000] transition-all">
+                    Download Now
+                  </button>
+
+                  {user && (
+                    <button
+                      onClick={() => setIsSaved(!isSaved)}
+                      className="p-3 rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
+                    >
+                      {isSaved ? (
+                        <BookmarkSolid className="w-6 h-6" />
+                      ) : (
+                        <BookmarkOutline className="w-6 h-6" />
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* ARROWS */}
       <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-primary transition-colors z-10"
-        disabled={isTransitioning}
+        onClick={prevSlideFn}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20"
       >
         <ChevronLeftIcon className="w-6 h-6 text-white" />
       </button>
 
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-primary transition-colors z-10"
-        disabled={isTransitioning}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20"
       >
         <ChevronRightIcon className="w-6 h-6 text-white" />
       </button>
 
-      {/* Slide Indicators */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+      {/* NAV DOTS */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
         {spotlight.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 ${
+            className={`transition-all duration-300 rounded-full ${
               index === currentSlide
-                ? "w-8 h-2 bg-primary"
-                : "w-2 h-2 bg-secondary/50 hover:bg-secondary"
-            } rounded-full`}
-            disabled={isTransitioning}
+                ? "w-10 h-2.5 bg-primary shadow-lg"
+                : "w-2.5 h-2.5 bg-white/40 hover:bg-white"
+            }`}
           />
         ))}
       </div>
 
-      {/* Drag indicator */}
-      {isDragging && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm z-20">
-          {dragOffset > 0 ? "← Previous" : "Next →"}
-        </div>
-      )}
+      {/* COUNTER */}
+      <div className="absolute top-6 right-6 bg-black/50 text-white px-4 py-2 rounded-full text-sm z-20">
+        <span className="text-primary font-bold">{currentSlide + 1}</span> /{" "}
+        {spotlight.length}
+      </div>
     </div>
   );
 };
