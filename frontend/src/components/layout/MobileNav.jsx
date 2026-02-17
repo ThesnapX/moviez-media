@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useSearch } from "../../context/SearchContext";
 import {
   HomeIcon,
   FilmIcon,
@@ -10,7 +11,7 @@ import { HomeIcon as HomeIconSolid } from "@heroicons/react/24/solid";
 
 const MobileNav = () => {
   const location = useLocation();
-
+  const { setShowSearchModal } = useSearch();
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
@@ -22,6 +23,7 @@ const MobileNav = () => {
       activeIcon: MagnifyingGlassIcon,
       label: "Search",
       special: true,
+      onClick: () => setShowSearchModal(true),
     },
     { path: "/tv-series", icon: TvIcon, activeIcon: TvIcon, label: "TV" },
     {

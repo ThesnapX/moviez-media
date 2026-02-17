@@ -187,4 +187,29 @@ router.delete("/:id", protect, admin, async (req, res) => {
   }
 });
 
+// Search movies by title, description, or genre
+router.get("/search/:query", async (req, res) => {
+  try {
+    const query = req.params.query;
+
+    if (!query || query.length < 2) {
+      return res.json([]);
+    }
+
+    const searchRegex = new RegExp(query, "i");
+
+    const movies = await Movie.find({
+      $or: [{ title: searchRegex }, { description: searchRegex }],
+    })
+      .populate("genres")
+      .limit(20)
+      .sort({ views: -1 });
+
+    res.json(movies);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

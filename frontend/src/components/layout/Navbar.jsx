@@ -1,11 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { MagnifyingGlassIcon, BookmarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import { useSearch } from "../../context/SearchContext";
 import AuthModal from "../common/AuthModal";
+import SearchModal from "../common/SearchModal";
 import { useState } from "react";
 
 const Navbar = () => {
   const { user, logout, setShowAuthModal } = useAuth();
+  const { setShowSearchModal } = useSearch(); // Add this line
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
@@ -58,14 +61,13 @@ const Navbar = () => {
 
             {/* Search Bar */}
             <div className="flex-1 max-w-md mx-8">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search movies..."
-                  className="w-full bg-white/5 backdrop-blur-sm text-secondary pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-white/10"
-                />
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="w-full bg-white/5 backdrop-blur-sm text-secondary/60 pl-10 pr-4 py-2 rounded-lg text-left hover:bg-white/10 transition-colors border border-white/10 relative"
+              >
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary/60" />
-              </div>
+                <span>Search movies...</span>
+              </button>
             </div>
 
             {/* Right Section */}
@@ -88,7 +90,7 @@ const Navbar = () => {
                         src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePicture}`}
                         alt={user.name}
                         className="w-full h-full object-cover"
-                        key={user.profilePicture} // Add key to force re-render when image changes
+                        key={user.profilePicture}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/avatar-1.png`;
@@ -155,6 +157,7 @@ const Navbar = () => {
         </div>
       </nav>
       <AuthModal />
+      <SearchModal />
     </>
   );
 };

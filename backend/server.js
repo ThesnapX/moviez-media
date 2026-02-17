@@ -86,6 +86,9 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "Backend is working!" });
 });
 
+// Other Routes
+app.use("/api/newsletter", require("./routes/newsletterRoutes"));
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

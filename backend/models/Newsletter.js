@@ -20,6 +20,11 @@ const newsletterSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  status: {
+    type: String,
+    enum: ["sent", "failed"],
+    default: "sent",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

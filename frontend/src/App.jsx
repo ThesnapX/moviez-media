@@ -18,61 +18,66 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import MovieDetails from "./pages/MovieDetails"; // Add this import
 import RequestMovie from "./pages/RequestMovie";
+import Search from "./pages/Search";
 
 // Context
 import { AuthProvider } from "./context/AuthContext";
 import { MovieProvider } from "./context/MovieContext";
+import { SearchProvider } from "./context/SearchContext";
 
 function App() {
   return (
     <AuthProvider>
-      <MovieProvider>
-        <Router>
-          <div className="min-h-screen bg-dark">
-            {/* Desktop Navbar */}
-            <div className="hidden md:block">
-              <Navbar />
-            </div>
+      <SearchProvider>
+        <MovieProvider>
+          <Router>
+            <div className="min-h-screen bg-dark">
+              {/* Desktop Navbar */}
+              <div className="hidden md:block">
+                <Navbar />
+              </div>
 
-            {/* Main Content */}
-            <main className="pb-16 md:pb-0">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/movies" element={<Movies />} />
-                <Route path="/tv-series" element={<TVSeries />} />
-                <Route path="/anime" element={<Anime />} />
-                <Route path="/popular" element={<Popular />} />
-                <Route path="/watchlist" element={<Watchlist />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/admin/*" element={<AdminDashboard />} />
-                <Route path="/movie/:id" element={<MovieDetails />} />{" "}
-                <Route path="/watchlist" element={<Watchlist />} />
-                <Route path="/request-movie" element={<RequestMovie />} />
-                {/* Add this route */}
-              </Routes>
-            </main>
+              {/* Main Content */}
+              <main className="pb-16 md:pb-0">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/movies" element={<Movies />} />
+                  <Route path="/tv-series" element={<TVSeries />} />
+                  <Route path="/anime" element={<Anime />} />
+                  <Route path="/popular" element={<Popular />} />
+                  <Route path="/watchlist" element={<Watchlist />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/admin/*" element={<AdminDashboard />} />
+                  <Route path="/movie/:id" element={<MovieDetails />} />{" "}
+                  <Route path="/watchlist" element={<Watchlist />} />
+                  <Route path="/request-movie" element={<RequestMovie />} />
+                  <Route path="/search" element={<Search />} />
+                  {/* Add this route */}
+                </Routes>
+              </main>
 
-            {/* Mobile Navigation */}
-            <div className="md:hidden">
-              <MobileNav />
-            </div>
+              {/* Mobile Navigation */}
+              <div className="md:hidden">
+                <MobileNav />
+              </div>
 
-            {/* Desktop Footer */}
-            <div className="hidden md:block">
-              <Footer />
+              {/* Desktop Footer */}
+              <div className="hidden md:block">
+                <Footer />
+              </div>
             </div>
-          </div>
-          <ToastContainer
-            position="bottom-right"
-            theme="dark"
-            toastStyle={{
-              backgroundColor: "#1a1a1a",
-              color: "#e7e7e7",
-              border: "1px solid #f00000",
-            }}
-          />
-        </Router>
-      </MovieProvider>
+            <ToastContainer
+              position="bottom-right"
+              theme="dark"
+              toastStyle={{
+                backgroundColor: "#1a1a1a",
+                color: "#e7e7e7",
+                border: "1px solid #f00000",
+              }}
+            />
+          </Router>
+        </MovieProvider>
+      </SearchProvider>
     </AuthProvider>
   );
 }
