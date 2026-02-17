@@ -258,7 +258,7 @@ const MovieDetails = () => {
               )}
             </div>
 
-            {/* Download Buttons Section - Redesigned */}
+            {/* Download Buttons Section - Fixed */}
             {movie.downloadUrls && movie.downloadUrls.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-secondary mb-3">
@@ -271,7 +271,17 @@ const MovieDetails = () => {
                         href={download.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-sm border border-primary/30 rounded-xl px-4 py-2 hover:border-primary transition-all hover:scale-105"
+                        onClick={(e) => {
+                          // Prevent any default behavior that might be intercepting
+                          e.stopPropagation();
+                          // Force open in new tab
+                          window.open(
+                            download.url,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }}
+                        className="group relative bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-sm border border-primary/30 rounded-xl px-4 py-2 hover:border-primary transition-all hover:scale-105 cursor-pointer"
                       >
                         <div className="flex items-center space-x-2">
                           <span className="font-bold text-primary">
@@ -281,7 +291,7 @@ const MovieDetails = () => {
                             <>
                               <span className="text-white/20">|</span>
                               <span className="text-xs text-secondary/60">
-                                {download.size}GB
+                                {download.size}
                               </span>
                             </>
                           )}

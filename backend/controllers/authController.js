@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, profilePicture } = req.body;
+    const { name, email, password, profilePicture } = req.body; // Make sure profilePicture is destructured
 
     // Check if user exists
     let user = await User.findOne({ email });
@@ -24,12 +24,12 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with profile picture
     user = new User({
       name,
       email,
       password: hashedPassword,
-      profilePicture: profilePicture || "/uploads/defaults/default-avatar.png",
+      profilePicture: profilePicture || "/uploads/avatars/avatar-1.png", // Use selected or default
     });
 
     await user.save();

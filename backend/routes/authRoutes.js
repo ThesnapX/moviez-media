@@ -12,7 +12,7 @@ router.post(
     body("password")
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters"),
-    body("profilePicture").optional(),
+    body("profilePicture").optional(), // Make sure this is included
   ],
   authController.register,
 );

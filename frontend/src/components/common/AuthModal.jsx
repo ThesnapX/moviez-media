@@ -29,7 +29,6 @@ const AuthModal = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(
     "/uploads/avatars/default-avatar.png",
   );
-
   if (!showAuthModal) return null;
 
   const onSubmit = async (data) => {

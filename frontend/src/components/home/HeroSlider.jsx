@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -11,6 +12,8 @@ import { useAuth } from "../../context/AuthContext";
 const HeroSlider = () => {
   const { spotlight } = useMovies();
   const { user } = useAuth();
+  const { checkInWatchlist, addToWatchlist, removeFromWatchlist } = useMovies();
+  const navigate = useNavigate();
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState(null);
@@ -25,6 +28,16 @@ const HeroSlider = () => {
 
   const autoPlayRef = useRef(null);
   const containerRef = useRef(null);
+  const imageRef = useRef(null);
+
+  // Check if current movie is in watchlist
+  useEffect(() => {
+    if (user && spotlight.length > 0 && spotlight[currentSlide]) {
+      setIsSaved(checkInWatchlist(spotlight[currentSlide]._id));
+    } else {
+      setIsSaved(false);
+    }
+  }, [user, currentSlide, spotlight, checkInWatchlist]);
 
   /* ================= AUTOPLAY ================= */
   useEffect(() => {
@@ -81,7 +94,9 @@ const HeroSlider = () => {
     setIsDragging(true);
     setStartX(e.clientX || e.touches?.[0].clientX);
     stopAutoPlay();
-    containerRef.current.style.cursor = "grabbing";
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grabbing";
+    }
   };
 
   const handleDragMove = (e) => {
@@ -99,11 +114,55 @@ const HeroSlider = () => {
 
     setIsDragging(false);
     setDragOffset(0);
-    containerRef.current.style.cursor = "grab";
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grab";
+    }
     startAutoPlay();
   };
 
+  /* ================= WATCHLIST HANDLER ================= */
+  const handleSaveToggle = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      // You might want to show login modal here
+      return;
+    }
+
+    const currentMovie = spotlight[currentSlide];
+    if (!currentMovie) return;
+
+    if (isSaved) {
+      const success = await removeFromWatchlist(currentMovie._id);
+      if (success) setIsSaved(false);
+    } else {
+      const success = await addToWatchlist(currentMovie._id);
+      if (success) setIsSaved(true);
+    }
+  };
+
+  /* ================= NAVIGATION ================= */
+  const handleDownloadClick = () => {
+    const currentMovie = spotlight[currentSlide];
+    if (currentMovie) {
+      navigate(`/movie/${currentMovie._id}`);
+    }
+  };
+
   if (!spotlight.length) return null;
+
+  const currentMovie = spotlight[currentSlide];
+
+  // Optimize image URL for better quality
+  const getOptimizedImageUrl = (url) => {
+    if (!url) return "";
+    // If it's a Cloudinary URL, add quality and format parameters
+    if (url.includes("cloudinary")) {
+      // Remove any existing transformations and add high quality
+      return url.replace(/upload\/.*?\//, "upload/q_90,f_auto/");
+    }
+    return url;
+  };
 
   const getSlideStyle = (index) => {
     if (isDragging && index === currentSlide) {
@@ -152,81 +211,112 @@ const HeroSlider = () => {
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {/* SLIDES */}
-        {spotlight.map((movie, index) => (
-          <div
-            key={index}
-            className="absolute inset-0"
-            style={getSlideStyle(index)}
-          >
-            {/* Background */}
+        {/* HIGH QUALITY BACKGROUND IMAGES */}
+        {spotlight.map((movie, index) => {
+          const imageUrl =
+            movie?.posterHorizontal?.url || movie?.posterHorizontal;
+          const optimizedUrl = getOptimizedImageUrl(imageUrl);
+
+          return (
             <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${movie?.posterHorizontal?.url || movie?.posterHorizontal})`,
-              }}
+              key={index}
+              className="absolute inset-0"
+              style={getSlideStyle(index)}
             >
-              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/80 to-transparent" />
-            </div>
+              {/* Background Image - High Quality */}
+              <div className="absolute inset-0 overflow-hidden">
+                {/* Use img tag instead of background-image for better quality control */}
+                <img
+                  ref={index === currentSlide ? imageRef : null}
+                  src={optimizedUrl}
+                  alt={movie?.title}
+                  className="w-full h-full object-cover object-center"
+                  style={{
+                    filter:
+                      isDragging && index === currentSlide
+                        ? `brightness(${1 - Math.abs(dragOffset) * 0.002})`
+                        : "brightness(0.9)",
+                  }}
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    e.target.style.objectFit = "cover";
+                  }}
+                />
 
-            {/* Content */}
-            <div className="relative container mx-auto px-4 h-full flex items-end md:items-center pb-16 md:pb-0">
-              <div className="w-full md:w-1/2">
-                <span className="text-primary font-semibold text-lg mb-2 block">
-                  #{index + 1} Spotlight
-                </span>
+                {/* Gradient Overlay - Applied over image for better quality */}
+                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/80 to-transparent" />
+              </div>
 
-                <h1 className="text-4xl md:text-6xl mb-4 text-white">
-                  {movie?.title}
-                </h1>
+              {/* Content */}
+              <div className="absolute inset-0 flex items-end md:items-center pb-16 md:pb-0">
+                <div className="container mx-auto px-4">
+                  <div className="w-full md:w-1/2">
+                    <span className="text-primary font-semibold text-lg mb-2 block">
+                      #{index + 1} Spotlight
+                    </span>
 
-                <div className="flex items-center space-x-4 mb-4 text-secondary text-sm md:text-base">
-                  <span>{movie?.type?.replace("-", " ").toUpperCase()}</span>
-                  <span>•</span>
-                  <span>{new Date(movie?.releaseDate).getFullYear()}</span>
-                  <span>•</span>
-                  <span className="text-yellow-500">★ {movie?.imdbRating}</span>
-                </div>
+                    <h1 className="text-4xl md:text-6xl mb-4 text-white drop-shadow-lg">
+                      {movie?.title}
+                    </h1>
 
-                <p className="text-secondary/80 mb-6 line-clamp-3 text-sm md:text-base">
-                  {movie?.description}
-                </p>
+                    <div className="flex items-center space-x-4 mb-4 text-secondary text-sm md:text-base">
+                      <span>
+                        {movie?.type?.replace("-", " ").toUpperCase()}
+                      </span>
+                      <span>•</span>
+                      <span>{new Date(movie?.releaseDate).getFullYear()}</span>
+                      <span>•</span>
+                      <span className="text-yellow-500">
+                        ★ {movie?.imdbRating}
+                      </span>
+                    </div>
 
-                <div className="flex items-center space-x-4">
-                  <button className="bg-primary text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-[#d00000] transition-all">
-                    Download Now
-                  </button>
+                    <p className="text-secondary/80 mb-6 line-clamp-3 text-sm md:text-base max-w-xl">
+                      {movie?.description}
+                    </p>
 
-                  {user && (
-                    <button
-                      onClick={() => setIsSaved(!isSaved)}
-                      className="p-3 rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
-                    >
-                      {isSaved ? (
-                        <BookmarkSolid className="w-6 h-6" />
-                      ) : (
-                        <BookmarkOutline className="w-6 h-6" />
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={handleDownloadClick}
+                        className="bg-primary text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-[#d00000] transition-all shadow-lg shadow-primary/30 cursor-pointer"
+                      >
+                        Download Now
+                      </button>
+
+                      {user && (
+                        <button
+                          onClick={handleSaveToggle}
+                          className="p-3 rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all cursor-pointer"
+                        >
+                          {isSaved ? (
+                            <BookmarkSolid className="w-6 h-6" />
+                          ) : (
+                            <BookmarkOutline className="w-6 h-6" />
+                          )}
+                        </button>
                       )}
-                    </button>
-                  )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ARROWS */}
       <button
         onClick={prevSlideFn}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20 backdrop-blur-sm cursor-pointer"
+        disabled={isTransitioning}
       >
         <ChevronLeftIcon className="w-6 h-6 text-white" />
       </button>
 
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20 backdrop-blur-sm cursor-pointer"
+        disabled={isTransitioning}
       >
         <ChevronRightIcon className="w-6 h-6 text-white" />
       </button>
@@ -237,20 +327,28 @@ const HeroSlider = () => {
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 rounded-full ${
+            className={`transition-all duration-300 rounded-full cursor-pointer ${
               index === currentSlide
-                ? "w-10 h-2.5 bg-primary shadow-lg"
+                ? "w-10 h-2.5 bg-primary shadow-lg shadow-primary/50"
                 : "w-2.5 h-2.5 bg-white/40 hover:bg-white"
             }`}
+            disabled={isTransitioning}
           />
         ))}
       </div>
 
       {/* COUNTER */}
-      <div className="absolute top-6 right-6 bg-black/50 text-white px-4 py-2 rounded-full text-sm z-20">
+      <div className="absolute top-6 right-6 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm z-20 border border-white/10">
         <span className="text-primary font-bold">{currentSlide + 1}</span> /{" "}
         {spotlight.length}
       </div>
+
+      {/* DRAG INDICATOR */}
+      {isDragging && (
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm z-30 border border-white/10">
+          {dragOffset > 0 ? "← Previous" : "Next →"}
+        </div>
+      )}
     </div>
   );
 };

@@ -47,59 +47,61 @@ const AvatarSelector = ({
         Choose Profile Picture
       </label>
 
-      {/* Avatar Grid - Scrollable with fixed height */}
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4 max-h-80 overflow-y-auto p-3 bg-[#2a2a2a] rounded-xl scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-        {avatars.map((avatar) => {
+      {/* Avatar Grid */}
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4 max-h-80 overflow-y-auto p-3 bg-[#2a2a2a] rounded-xl">
+        {avatars.map((avatarItem) => {
           const isSelected =
-            (tempSelectedAvatar || selectedAvatar) === avatar.url;
-          const fullUrl = `${backendUrl}${avatar.url}`;
+            (tempSelectedAvatar || selectedAvatar) === avatarItem.url;
+          const fullUrl = `${backendUrl}${avatarItem.url}`;
 
           return (
             <div
-              key={avatar.id}
-              onClick={() => handleAvatarClick(avatar.url)}
-              className="relative cursor-pointer group aspect-square"
+              key={avatarItem.id}
+              onClick={() => handleAvatarClick(avatarItem.url)}
+              className="relative cursor-pointer group"
             >
-              {/* Avatar Image Container */}
-              <div className="relative w-full h-full">
-                {/* Avatar Image with darken effect when selected */}
-                <div
-                  className={`absolute inset-0 rounded-full overflow-hidden transition-all duration-200 ${
-                    isSelected ? "brightness-50" : "group-hover:brightness-90"
-                  }`}
-                >
-                  <img
-                    src={fullUrl}
-                    alt={`Avatar ${avatar.id}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `${backendUrl}/uploads/avatars/avatar-1.png`;
-                    }}
-                  />
-                </div>
-
-                {/* Selection Ring */}
-                {isSelected && (
-                  <>
-                    {/* Outer ring */}
-                    <div className="absolute inset-0 rounded-full ring-4 ring-primary ring-offset-2 ring-offset-[#2a2a2a]"></div>
-
-                    {/* Center Tick Icon - No background, just red tick */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <CheckCircleIcon className="w-8 h-8 text-primary drop-shadow-lg" />
-                    </div>
-                  </>
-                )}
-
-                {/* Hover Ring for non-selected */}
-                {!isSelected && (
-                  <div className="absolute inset-0 rounded-full ring-2 ring-transparent group-hover:ring-primary/50 transition-all"></div>
-                )}
+              {/* Avatar Image */}
+              <div
+                className={`relative rounded-full overflow-hidden transition-all duration-200 ${
+                  isSelected
+                    ? "ring-4 ring-primary ring-offset-2 ring-offset-[#2a2a2a] scale-105"
+                    : "ring-2 ring-transparent group-hover:ring-primary/50"
+                }`}
+              >
+                <img
+                  src={fullUrl}
+                  alt={`Avatar ${avatarItem.id}`}
+                  className="w-full h-full aspect-square object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `${backendUrl}/uploads/avatars/avatar-1.png`;
+                  }}
+                />
               </div>
+
+              {/* Selected Check Icon */}
+              {isSelected && (
+                <div className="absolute -top-1 -right-1">
+                  <CheckCircleIcon className="w-5 h-5 text-primary bg-white rounded-full" />
+                </div>
+              )}
             </div>
           );
         })}
+      </div>
+
+      {/* Selection Status */}
+      <div className="text-center text-sm">
+        {tempSelectedAvatar ? (
+          <span className="text-primary">
+            Avatar selected{" "}
+            {tempSelectedAvatar !== selectedAvatar && "(not saved)"}
+          </span>
+        ) : selectedAvatar ? (
+          <span className="text-secondary">Current avatar selected</span>
+        ) : (
+          <span className="text-secondary/60">Click an avatar to select</span>
+        )}
       </div>
     </div>
   );
