@@ -14,7 +14,7 @@ export const SearchProvider = ({ children }) => {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  // Perform search
+  // Perform search - NO AUTHENTICATION REQUIRED
   const performSearch = async (query) => {
     if (!query || query.length < 2) {
       setSearchResults([]);
@@ -23,12 +23,13 @@ export const SearchProvider = ({ children }) => {
 
     setIsSearching(true);
     try {
+      // This endpoint should be public (no auth required)
       const response = await axios.get(
         `${backendUrl}/api/movies/search/${encodeURIComponent(query)}`,
       );
       setSearchResults(response.data);
 
-      // Add to recent searches
+      // Add to recent searches (local only, no auth needed)
       if (query.length >= 2) {
         setRecentSearches((prev) => {
           const newSearches = [query, ...prev.filter((s) => s !== query)].slice(

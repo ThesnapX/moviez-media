@@ -7,6 +7,8 @@ import Navbar from "./components/layout/Navbar";
 import MobileNav from "./components/layout/MobileNav";
 import MobileTopNav from "./components/layout/MobileTopNav";
 import Footer from "./components/layout/Footer";
+import AuthModal from "./components/common/AuthModal";
+import SearchModal from "./components/common/SearchModal"; // Add this import
 
 // Pages
 import Home from "./pages/Home";
@@ -43,7 +45,7 @@ function App() {
                 <Navbar />
               </div>
 
-              {/* Main Content - Add padding-top on mobile to account for top nav */}
+              {/* Main Content */}
               <main className="pb-16 md:pb-0 pt-[57px] md:pt-0">
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -70,6 +72,9 @@ function App() {
                 <Footer />
               </div>
             </div>
+            {/* Modals - Place them outside the main content but inside Router */}
+            <AuthModal />
+            <SearchModal /> {/* Add this line */}
             <ToastContainer
               position="bottom-right"
               theme="dark"

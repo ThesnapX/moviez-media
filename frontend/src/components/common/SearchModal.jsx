@@ -11,7 +11,6 @@ import {
   RocketLaunchIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
-import { MagnifyingGlassIcon as MagnifyingGlassSolid } from "@heroicons/react/24/solid";
 
 const SearchModal = () => {
   const {
@@ -20,7 +19,6 @@ const SearchModal = () => {
     searchResults,
     isSearching,
     performSearch,
-    clearSearch,
     recentSearches,
     removeRecentSearch,
     clearRecentSearches,
@@ -45,10 +43,10 @@ const SearchModal = () => {
 
   // Perform search when debounced query changes
   useEffect(() => {
-    if (debouncedQuery) {
+    if (debouncedQuery && debouncedQuery.length >= 2) {
       performSearch(debouncedQuery);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, performSearch]);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -72,6 +70,18 @@ const SearchModal = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [showSearchModal]);
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && showSearchModal) {
+        setShowSearchModal(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => document.removeEventListener("keydown", handleEscKey);
   }, [showSearchModal]);
 
   const handleMovieClick = (movieId) => {
@@ -125,7 +135,7 @@ const SearchModal = () => {
           )}
         </div>
 
-        {/* Search Content */}
+        {/* Search Content - No authentication checks needed */}
         <div className="max-h-[60vh] overflow-y-auto">
           {isSearching ? (
             <div className="flex justify-center py-8">
