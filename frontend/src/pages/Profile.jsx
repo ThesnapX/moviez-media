@@ -1,12 +1,23 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useMovies } from "../context/MovieContext";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {
+  ChevronRightIcon,
+  BookmarkIcon,
+  FilmIcon,
+  TvIcon,
+  RocketLaunchIcon,
+} from "@heroicons/react/24/outline";
 import AvatarSelector from "../components/common/AvatarSelector";
+import MovieCard from "../components/common/MovieCard";
 
 const Profile = () => {
-  const { user, logout, updateUser } = useAuth(); // Add updateUser
+  const { user, logout, updateUser } = useAuth();
+  const { watchlist, watchlistLoading, refreshWatchlist } = useMovies();
   const [activeTab, setActiveTab] = useState("profile");
   const [editing, setEditing] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(
@@ -32,7 +43,6 @@ const Profile = () => {
     },
   });
 
-  // Watch password fields for validation
   const newPassword = watch("newPassword");
 
   useEffect(() => {
@@ -46,35 +56,38 @@ const Profile = () => {
     }
   }, [user, setValue]);
 
+  // Refresh watchlist when tab changes to watchlist
+  useEffect(() => {
+    if (activeTab === "watchlist") {
+      refreshWatchlist();
+    }
+  }, [activeTab]);
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       const updateData = {
         name: data.name,
         email: data.email,
-        profilePicture: tempSelectedAvatar, // Use tempSelectedAvatar
+        profilePicture: tempSelectedAvatar,
       };
 
-      // Only include password if it's provided
       if (data.newPassword) {
         updateData.password = data.newPassword;
       }
 
-      const response = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`,
         updateData,
       );
 
-      // Update user in context using the updateUser function
       updateUser({
         name: data.name,
         email: data.email,
         profilePicture: tempSelectedAvatar,
       });
 
-      // Update selectedAvatar to match tempSelectedAvatar
       setSelectedAvatar(tempSelectedAvatar);
-
       toast.success("Profile updated successfully");
       setEditing(false);
     } catch (error) {
@@ -84,16 +97,17 @@ const Profile = () => {
     }
   };
 
-  const handleCancel = () => {
-    setEditing(false);
-    setValue("name", user.name);
-    setValue("email", user.email);
-    setValue("newPassword", "");
-    setValue("confirmPassword", "");
-    // Reset temp selection to the actual saved avatar
-    setTempSelectedAvatar(
-      user.profilePicture || "/uploads/avatars/avatar-1.png",
-    );
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case "movie":
+        return <FilmIcon className="w-4 h-4" />;
+      case "tv-series":
+        return <TvIcon className="w-4 h-4" />;
+      case "anime":
+        return <RocketLaunchIcon className="w-4 h-4" />;
+      default:
+        return null;
+    }
   };
 
   if (!user) {
@@ -107,7 +121,7 @@ const Profile = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Profile Header */}
         <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6 border border-primary/20">
           <div className="flex items-center space-x-4">
@@ -116,6 +130,7 @@ const Profile = () => {
                 src={`${import.meta.env.VITE_BACKEND_URL}${selectedAvatar}`}
                 alt={user.name}
                 className="w-full h-full object-cover"
+                key={selectedAvatar}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/avatar-1.png`;
@@ -146,13 +161,19 @@ const Profile = () => {
           </button>
           <button
             onClick={() => setActiveTab("watchlist")}
-            className={`pb-2 px-4 font-semibold transition-colors ${
+            className={`pb-2 px-4 font-semibold transition-colors flex items-center space-x-2 ${
               activeTab === "watchlist"
                 ? "text-primary border-b-2 border-primary"
                 : "text-secondary hover:text-primary"
             }`}
           >
-            Watchlist
+            <BookmarkIcon className="w-5 h-5" />
+            <span>Watchlist</span>
+            {watchlist.length > 0 && (
+              <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
+                {watchlist.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -188,16 +209,9 @@ const Profile = () => {
                 <div>
                   <label className="text-secondary block mb-2">Full Name</label>
                   <input
-                    {...register("name", {
-                      required: "Name is required",
-                      minLength: {
-                        value: 2,
-                        message: "Name must be at least 2 characters",
-                      },
-                    })}
+                    {...register("name", { required: "Name is required" })}
                     type="text"
                     className="w-full bg-[#2a2a2a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your name"
                   />
                   {errors.name && (
                     <p className="text-primary text-sm mt-1">
@@ -216,12 +230,11 @@ const Profile = () => {
                       required: "Email is required",
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Please enter a valid email address",
+                        message: "Invalid email address",
                       },
                     })}
                     type="email"
                     className="w-full bg-[#2a2a2a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your email"
                   />
                   {errors.email && (
                     <p className="text-primary text-sm mt-1">
@@ -230,7 +243,7 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* New Password Field */}
+                {/* Password Fields */}
                 <div>
                   <label className="text-secondary block mb-2">
                     New Password (optional)
@@ -244,19 +257,12 @@ const Profile = () => {
                     })}
                     type="password"
                     className="w-full bg-[#2a2a2a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Leave blank to keep current password"
                   />
-                  {errors.newPassword && (
-                    <p className="text-primary text-sm mt-1">
-                      {errors.newPassword.message}
-                    </p>
-                  )}
                 </div>
 
-                {/* Confirm Password Field */}
                 <div>
                   <label className="text-secondary block mb-2">
-                    Confirm New Password
+                    Confirm Password
                   </label>
                   <input
                     {...register("confirmPassword", {
@@ -267,7 +273,6 @@ const Profile = () => {
                     })}
                     type="password"
                     className="w-full bg-[#2a2a2a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Confirm your new password"
                   />
                   {errors.confirmPassword && (
                     <p className="text-primary text-sm mt-1">
@@ -282,7 +287,6 @@ const Profile = () => {
                     selectedAvatar={selectedAvatar}
                     tempSelectedAvatar={tempSelectedAvatar}
                     onTempSelect={setTempSelectedAvatar}
-                    onSelect={setSelectedAvatar}
                   />
                 </div>
 
@@ -297,7 +301,14 @@ const Profile = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={handleCancel}
+                    onClick={() => {
+                      setEditing(false);
+                      setValue("name", user.name);
+                      setValue("email", user.email);
+                      setValue("newPassword", "");
+                      setValue("confirmPassword", "");
+                      setTempSelectedAvatar(selectedAvatar);
+                    }}
                     className="flex-1 bg-[#2a2a2a] text-secondary py-3 rounded-lg font-semibold hover:bg-[#3a3a3a] transition-colors"
                   >
                     Cancel
@@ -310,9 +321,70 @@ const Profile = () => {
 
         {activeTab === "watchlist" && (
           <div className="bg-[#1a1a1a] rounded-lg p-6 border border-primary/20">
-            <p className="text-secondary text-center py-8">
-              Your watchlist will appear here
-            </p>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-['Bebas_Neue'] text-primary">
+                Your Watchlist
+              </h2>
+              {watchlist.length > 4 && (
+                <Link
+                  to="/watchlist"
+                  className="flex items-center space-x-1 text-primary hover:text-primary/80 transition-colors"
+                >
+                  <span>View All</span>
+                  <ChevronRightIcon className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+
+            {watchlistLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : watchlist.length === 0 ? (
+              <div className="text-center py-8">
+                <BookmarkIcon className="w-16 h-16 text-primary/30 mx-auto mb-3" />
+                <p className="text-secondary mb-4">Your watchlist is empty</p>
+                <Link
+                  to="/movies"
+                  className="inline-block bg-primary text-white px-4 py-2 rounded-lg hover:bg-[#d00000] transition-colors"
+                >
+                  Browse Movies
+                </Link>
+              </div>
+            ) : (
+              <>
+                {/* Latest 4 watchlist items */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {watchlist.slice(0, 4).map((item) => (
+                    <div key={item._id} className="relative">
+                      <MovieCard movie={item} />
+                      {/* Type Badge */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <div className="px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white flex items-center space-x-1">
+                          {getTypeIcon(item.type)}
+                          <span className="capitalize">
+                            {item.type.replace("-", " ")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* View All Button for smaller screens */}
+                {watchlist.length > 4 && (
+                  <div className="mt-6 text-center md:hidden">
+                    <Link
+                      to="/watchlist"
+                      className="inline-flex items-center space-x-2 bg-primary/20 text-primary px-6 py-2 rounded-lg hover:bg-primary/30 transition-colors"
+                    >
+                      <span>View All {watchlist.length} Items</span>
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 

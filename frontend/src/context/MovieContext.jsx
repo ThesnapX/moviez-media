@@ -1,68 +1,87 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth } from "./AuthContext";
 
 const MovieContext = createContext();
 
 export const useMovies = () => useContext(MovieContext);
 
 export const MovieProvider = ({ children }) => {
+  const { user } = useAuth();
   const [movies, setMovies] = useState([]);
   const [tvSeries, setTvSeries] = useState([]);
   const [anime, setAnime] = useState([]);
   const [popular, setPopular] = useState([]);
   const [spotlight, setSpotlight] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   useEffect(() => {
     fetchAllContent();
   }, []);
 
+  // Fetch watchlist when user changes
+  useEffect(() => {
+    if (user) {
+      fetchWatchlist();
+    } else {
+      setWatchlist([]);
+    }
+  }, [user]);
+
   const fetchAllContent = async () => {
     try {
       setLoading(true);
 
-      // Fetch movies
-      const moviesRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/movies?type=movie`,
-      );
+      const [
+        moviesRes,
+        tvRes,
+        animeRes,
+        popularRes,
+        spotlightRes,
+        categoriesRes,
+      ] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/movies?type=movie`),
+        axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/movies?type=tv-series`,
+        ),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/movies?type=anime`),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/movies/popular`),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/movies/spotlight`),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/genres`),
+      ]);
+
       setMovies(moviesRes.data);
-
-      // Fetch TV series
-      const tvRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/movies?type=tv-series`,
-      );
       setTvSeries(tvRes.data);
-
-      // Fetch anime
-      const animeRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/movies?type=anime`,
-      );
       setAnime(animeRes.data);
-
-      // Fetch popular (most viewed)
-      const popularRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/movies/popular`,
-      );
       setPopular(popularRes.data);
-
-      // Fetch spotlight
-      const spotlightRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/movies/spotlight`,
-      );
       setSpotlight(spotlightRes.data);
-
-      // Fetch categories
-      const categoriesRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/genres`,
-      );
       setCategories(categoriesRes.data);
     } catch (error) {
       console.error("Error fetching content:", error);
       toast.error("Failed to load content");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchWatchlist = async () => {
+    if (!user) return;
+
+    try {
+      setWatchlistLoading(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/watchlist`,
+      );
+      setWatchlist(response.data);
+    } catch (error) {
+      console.error("Error fetching watchlist:", error);
+      toast.error("Failed to load watchlist");
+    } finally {
+      setWatchlistLoading(false);
     }
   };
 
@@ -80,28 +99,62 @@ export const MovieProvider = ({ children }) => {
   };
 
   const addToWatchlist = async (movieId) => {
+    if (!user) {
+      toast.info("Please login to add to watchlist");
+      return false;
+    }
+
     try {
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/watchlist/${movieId}`,
       );
+      await fetchWatchlist(); // Refresh watchlist
       toast.success("Added to watchlist");
       return true;
     } catch (error) {
-      toast.error("Failed to add to watchlist");
+      if (error.response?.status === 400) {
+        toast.info("Movie already in watchlist");
+      } else {
+        toast.error("Failed to add to watchlist");
+      }
       return false;
     }
   };
 
   const removeFromWatchlist = async (movieId) => {
+    if (!user) return false;
+
     try {
       await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/watchlist/${movieId}`,
       );
+      await fetchWatchlist(); // Refresh watchlist
       toast.success("Removed from watchlist");
       return true;
     } catch (error) {
       toast.error("Failed to remove from watchlist");
       return false;
+    }
+  };
+
+  const checkInWatchlist = (movieId) => {
+    return watchlist.some((item) => item._id === movieId);
+  };
+
+  const clearWatchlist = async () => {
+    if (!user || watchlist.length === 0) return;
+
+    try {
+      // Remove each item from watchlist
+      for (const item of watchlist) {
+        await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/api/users/watchlist/${item._id}`,
+        );
+      }
+      await fetchWatchlist();
+      toast.success("Watchlist cleared");
+    } catch (error) {
+      toast.error("Failed to clear watchlist");
     }
   };
 
@@ -112,11 +165,16 @@ export const MovieProvider = ({ children }) => {
     popular,
     spotlight,
     categories,
+    watchlist,
     loading,
+    watchlistLoading,
     getMovieById,
     addToWatchlist,
     removeFromWatchlist,
+    checkInWatchlist,
+    clearWatchlist,
     refresh: fetchAllContent,
+    refreshWatchlist: fetchWatchlist,
   };
 
   return (

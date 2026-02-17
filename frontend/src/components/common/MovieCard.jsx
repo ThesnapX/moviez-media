@@ -3,9 +3,13 @@ import { BookmarkIcon as BookmarkOutline } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useMovies } from "../../context/MovieContext";
 
 const MovieCard = ({ movie }) => {
   const { user } = useAuth();
+  const { checkInWatchlist, addToWatchlist, removeFromWatchlist } = useMovies();
+  const navigate = useNavigate();
+
   const [isSaved, setIsSaved] = useState(false);
   const [popupPosition, setPopupPosition] = useState({
     side: "right",
@@ -21,7 +25,14 @@ const MovieCard = ({ movie }) => {
   const isHoveringRef = useRef(false);
   const isHoveringPopupRef = useRef(false);
 
-  const navigate = useNavigate();
+  // Check if movie is in watchlist on mount and when user changes
+  useEffect(() => {
+    if (user && movie) {
+      setIsSaved(checkInWatchlist(movie._id));
+    } else {
+      setIsSaved(false);
+    }
+  }, [user, movie, checkInWatchlist]);
 
   // Handle mouse enter on card
   const handleMouseEnter = () => {
@@ -59,6 +70,24 @@ const MovieCard = ({ movie }) => {
     // Only hide if not hovering over card either
     if (!isHoveringRef.current) {
       setPopupPosition((prev) => ({ ...prev, show: false }));
+    }
+  };
+
+  // Handle save/unsave
+  const handleSaveToggle = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      // You might want to show login modal here
+      return;
+    }
+
+    if (isSaved) {
+      const success = await removeFromWatchlist(movie._id);
+      if (success) setIsSaved(false);
+    } else {
+      const success = await addToWatchlist(movie._id);
+      if (success) setIsSaved(true);
     }
   };
 
@@ -200,6 +229,13 @@ const MovieCard = ({ movie }) => {
             </div>
           </div>
         </div>
+
+        {/* Watchlist indicator on thumbnail */}
+        {isSaved && (
+          <div className="absolute top-2 right-2 z-10">
+            <BookmarkSolid className="w-5 h-5 text-primary" />
+          </div>
+        )}
       </div>
 
       {/* Title */}
@@ -255,6 +291,13 @@ const MovieCard = ({ movie }) => {
                       {movie.title}
                     </h4>
                   </div>
+
+                  {/* Watchlist indicator on popup poster */}
+                  {isSaved && (
+                    <div className="absolute top-2 right-2">
+                      <BookmarkSolid className="w-5 h-5 text-primary drop-shadow-lg" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -314,11 +357,11 @@ const MovieCard = ({ movie }) => {
 
                     {user && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsSaved(!isSaved);
-                        }}
+                        onClick={handleSaveToggle}
                         className="p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all"
+                        title={
+                          isSaved ? "Remove from watchlist" : "Add to watchlist"
+                        }
                       >
                         {isSaved ? (
                           <BookmarkSolid className="w-5 h-5" />
@@ -330,15 +373,17 @@ const MovieCard = ({ movie }) => {
                   </div>
 
                   {/* Additional info for TV shows */}
-                  {movie.type === "tv-series" && (
+                  {movie.type === "tv-series" && movie.seasons && (
                     <div className="mt-3 text-xs text-white/40 flex items-center space-x-2">
-                      <span>Season 2</span>
+                      <span>
+                        {movie.seasons} Season{movie.seasons > 1 ? "s" : ""}
+                      </span>
                       <span>•</span>
-                      <span>HD</span>
+                      <span>{movie.quality || "HD"}</span>
                       <span>•</span>
-                      <span>6.4</span>
+                      <span>{movie.episodes || "24"} Ep</span>
                       <span>•</span>
-                      <span>TV</span>
+                      <span>{movie.status || "Ongoing"}</span>
                     </div>
                   )}
                 </div>

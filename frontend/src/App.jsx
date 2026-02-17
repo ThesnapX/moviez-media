@@ -45,6 +45,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/movie/:id" element={<MovieDetails />} />{" "}
+                <Route path="/watchlist" element={<Watchlist />} />
                 {/* Add this route */}
               </Routes>
             </main>
