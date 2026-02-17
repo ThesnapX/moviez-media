@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 // Layout Components
 import Navbar from "./components/layout/Navbar";
 import MobileNav from "./components/layout/MobileNav";
+import MobileTopNav from "./components/layout/MobileTopNav";
 import Footer from "./components/layout/Footer";
 
 // Pages
@@ -16,7 +17,7 @@ import Popular from "./pages/Popular";
 import Watchlist from "./pages/Watchlist";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import MovieDetails from "./pages/MovieDetails"; // Add this import
+import MovieDetails from "./pages/MovieDetails";
 import RequestMovie from "./pages/RequestMovie";
 import Search from "./pages/Search";
 
@@ -32,13 +33,18 @@ function App() {
         <MovieProvider>
           <Router>
             <div className="min-h-screen bg-dark">
+              {/* Mobile Top Navigation */}
+              <div className="md:hidden">
+                <MobileTopNav />
+              </div>
+
               {/* Desktop Navbar */}
               <div className="hidden md:block">
                 <Navbar />
               </div>
 
-              {/* Main Content */}
-              <main className="pb-16 md:pb-0">
+              {/* Main Content - Add padding-top on mobile to account for top nav */}
+              <main className="pb-16 md:pb-0 pt-[57px] md:pt-0">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/movies" element={<Movies />} />
@@ -48,15 +54,13 @@ function App() {
                   <Route path="/watchlist" element={<Watchlist />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/admin/*" element={<AdminDashboard />} />
-                  <Route path="/movie/:id" element={<MovieDetails />} />{" "}
-                  <Route path="/watchlist" element={<Watchlist />} />
+                  <Route path="/movie/:id" element={<MovieDetails />} />
                   <Route path="/request-movie" element={<RequestMovie />} />
                   <Route path="/search" element={<Search />} />
-                  {/* Add this route */}
                 </Routes>
               </main>
 
-              {/* Mobile Navigation */}
+              {/* Mobile Bottom Navigation */}
               <div className="md:hidden">
                 <MobileNav />
               </div>

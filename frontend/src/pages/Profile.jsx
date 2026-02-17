@@ -395,6 +395,34 @@ const Profile = () => {
           </button>
         </div>
       </div>
+      {/* Mobile Footer */}
+      <div className="md:hidden mt-12 pt-6 border-t border-primary/20">
+        <div className="text-center space-y-2">
+          <p className="text-xs text-secondary/40">
+            © 2024 MoviezMedia. All rights reserved.
+          </p>
+          <div className="flex justify-center space-x-4 text-xs">
+            <Link
+              to="/privacy"
+              className="text-secondary/40 hover:text-primary transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/terms"
+              className="text-secondary/40 hover:text-primary transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              to="/contact"
+              className="text-secondary/40 hover:text-primary transition-colors"
+            >
+              Contact
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

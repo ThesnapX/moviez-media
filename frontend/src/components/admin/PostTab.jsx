@@ -281,9 +281,10 @@ const PostTab = () => {
       </div>
 
       {/* Add/Edit Modal */}
+      {/* Add/Edit Modal - Mobile Responsive */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="flex items-start sm:items-center justify-center min-h-screen p-2 sm:p-4">
             <div
               className="fixed inset-0 blur-backdrop"
               onClick={() => {
@@ -291,28 +292,29 @@ const PostTab = () => {
                 resetForm();
               }}
             ></div>
-            <div className="relative bg-[#1a1a1a] rounded-lg w-full max-w-3xl p-6 border border-primary/20 max-h-[90vh] overflow-y-auto">
-              {/* Close button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-                className="absolute top-4 right-4 text-secondary hover:text-primary transition-colors z-10"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
+            <div className="relative bg-[#1a1a1a] rounded-lg w-full max-w-3xl p-4 sm:p-6 border border-primary/20 max-h-[98vh] sm:max-h-[90vh] overflow-y-auto mt-16 sm:mt-0">
+              {/* Header with sticky on mobile */}
+              <div className="sticky top-0 bg-[#1a1a1a] z-10 pb-2 mb-2 border-b border-primary/20">
+                <h3 className="text-lg sm:text-xl text-primary pr-8">
+                  {editingMovie ? "Edit Post" : "Add New Post"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
+                  className="absolute top-4 right-4 text-secondary hover:text-primary transition-colors z-20"
+                >
+                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
 
-              <h3 className="text-xl mb-4 text-primary">
-                {editingMovie ? "Edit Post" : "Add New Post"}
-              </h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                {/* Basic Info - Stack on mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-secondary mb-1">
+                    <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Title <span className="text-primary">*</span>
                     </label>
                     <input
@@ -321,12 +323,12 @@ const PostTab = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                      className="w-full bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-secondary mb-1">
+                    <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Type <span className="text-primary">*</span>
                     </label>
                     <select
@@ -334,7 +336,7 @@ const PostTab = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, type: e.target.value })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                      className="w-full bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                       required
                     >
                       <option value="movie">Movie</option>
@@ -344,8 +346,9 @@ const PostTab = () => {
                   </div>
                 </div>
 
+                {/* Description */}
                 <div>
-                  <label className="block text-secondary mb-1">
+                  <label className="block text-secondary mb-1 text-sm sm:text-base">
                     Description <span className="text-primary">*</span>
                   </label>
                   <textarea
@@ -354,14 +357,15 @@ const PostTab = () => {
                       setFormData({ ...formData, description: e.target.value })
                     }
                     rows="4"
-                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                    className="w-full bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Date and Details - Stack on mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-secondary mb-1">
+                    <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Release Date <span className="text-primary">*</span>
                     </label>
                     <input
@@ -373,14 +377,14 @@ const PostTab = () => {
                           releaseDate: e.target.value,
                         })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                      className="w-full bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                       required
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2">
                     <div>
-                      <label className="block text-secondary mb-1">
+                      <label className="block text-secondary mb-1 text-sm sm:text-base">
                         Duration
                       </label>
                       <input
@@ -390,12 +394,12 @@ const PostTab = () => {
                           setFormData({ ...formData, duration: e.target.value })
                         }
                         placeholder="e.g., 2h 30m"
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                        className="w-full bg-[#2a2a2a] text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-secondary mb-1">
+                      <label className="block text-secondary mb-1 text-sm sm:text-base">
                         Age Rating
                       </label>
                       <select
@@ -406,7 +410,7 @@ const PostTab = () => {
                             ageRating: e.target.value,
                           })
                         }
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                        className="w-full bg-[#2a2a2a] text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
                       >
                         <option value="G">G</option>
                         <option value="PG">PG</option>
@@ -423,7 +427,7 @@ const PostTab = () => {
                     </div>
 
                     <div>
-                      <label className="block text-secondary mb-1">
+                      <label className="block text-secondary mb-1 text-sm sm:text-base">
                         Quality
                       </label>
                       <select
@@ -431,7 +435,7 @@ const PostTab = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, quality: e.target.value })
                         }
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                        className="w-full bg-[#2a2a2a] text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
                       >
                         <option value="HD">HD</option>
                         <option value="FHD">FHD</option>
@@ -446,8 +450,9 @@ const PostTab = () => {
                   </div>
                 </div>
 
+                {/* IMDB Rating */}
                 <div>
-                  <label className="block text-secondary mb-1">
+                  <label className="block text-secondary mb-1 text-sm sm:text-base">
                     IMDB Rating (0-10)
                   </label>
                   <input
@@ -463,31 +468,24 @@ const PostTab = () => {
                       );
                       setFormData({ ...formData, imdbRating: value });
                     }}
-                    onBlur={(e) => {
-                      const value = Math.min(
-                        10,
-                        Math.max(0, parseFloat(e.target.value) || 0),
-                      );
-                      setFormData({ ...formData, imdbRating: value });
-                    }}
-                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                    className="w-full sm:w-1/2 bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                   />
                 </div>
 
-                {/* File Uploads */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* File Uploads - Stack on mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Vertical Poster */}
                   <div>
-                    <label className="block text-secondary mb-1">
+                    <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Vertical Poster <span className="text-primary">*</span>
                     </label>
-                    <div className="border-2 border-dashed border-primary/30 rounded-lg p-4 text-center">
+                    <div className="border-2 border-dashed border-primary/30 rounded-lg p-3 sm:p-4 text-center">
                       {verticalPreview || verticalUploadPreview ? (
                         <div className="relative">
                           <img
                             src={verticalUploadPreview || verticalPreview}
                             alt="Vertical preview"
-                            className="max-h-40 mx-auto rounded-lg"
+                            className="max-h-32 sm:max-h-40 mx-auto rounded-lg"
                           />
                           <button
                             type="button"
@@ -498,14 +496,14 @@ const PostTab = () => {
                             }}
                             className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
                           >
-                            <TrashIcon className="w-4 h-4" />
+                            <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       ) : (
                         <div>
-                          <PhotoIcon className="w-12 h-12 text-secondary/50 mx-auto mb-2" />
+                          <PhotoIcon className="w-8 h-8 sm:w-12 sm:h-12 text-secondary/50 mx-auto mb-2" />
                           <label className="cursor-pointer">
-                            <span className="text-primary hover:underline">
+                            <span className="text-primary hover:underline text-sm sm:text-base">
                               Click to upload
                             </span>
                             <input
@@ -526,16 +524,16 @@ const PostTab = () => {
 
                   {/* Horizontal Poster */}
                   <div>
-                    <label className="block text-secondary mb-1">
+                    <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Horizontal Poster <span className="text-primary">*</span>
                     </label>
-                    <div className="border-2 border-dashed border-primary/30 rounded-lg p-4 text-center">
+                    <div className="border-2 border-dashed border-primary/30 rounded-lg p-3 sm:p-4 text-center">
                       {horizontalPreview || horizontalUploadPreview ? (
                         <div className="relative">
                           <img
                             src={horizontalUploadPreview || horizontalPreview}
                             alt="Horizontal preview"
-                            className="max-h-40 mx-auto rounded-lg"
+                            className="max-h-32 sm:max-h-40 mx-auto rounded-lg"
                           />
                           <button
                             type="button"
@@ -546,14 +544,14 @@ const PostTab = () => {
                             }}
                             className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
                           >
-                            <TrashIcon className="w-4 h-4" />
+                            <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       ) : (
                         <div>
-                          <PhotoIcon className="w-12 h-12 text-secondary/50 mx-auto mb-2" />
+                          <PhotoIcon className="w-8 h-8 sm:w-12 sm:h-12 text-secondary/50 mx-auto mb-2" />
                           <label className="cursor-pointer">
-                            <span className="text-primary hover:underline">
+                            <span className="text-primary hover:underline text-sm sm:text-base">
                               Click to upload
                             </span>
                             <input
@@ -577,10 +575,10 @@ const PostTab = () => {
 
                 {/* Genres */}
                 <div>
-                  <label className="block text-secondary mb-2">
+                  <label className="block text-secondary mb-2 text-sm sm:text-base">
                     Genres <span className="text-primary">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-[#2a2a2a] rounded-lg border border-primary/20">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-[#2a2a2a] rounded-lg border border-primary/20">
                     {genres.map((genre) => (
                       <label
                         key={genre._id}
@@ -597,9 +595,9 @@ const PostTab = () => {
                                 );
                             setFormData({ ...formData, genres: newGenres });
                           }}
-                          className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
+                          className="w-3 h-3 sm:w-4 sm:h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
                         />
-                        <span className="text-secondary text-sm">
+                        <span className="text-secondary text-xs sm:text-sm">
                           {genre.name}
                         </span>
                       </label>
@@ -612,19 +610,22 @@ const PostTab = () => {
                   )}
                 </div>
 
-                {/* Download URLs */}
+                {/* Download URLs - Stack on mobile */}
                 <div>
-                  <label className="block text-secondary mb-2">
+                  <label className="block text-secondary mb-2 text-sm sm:text-base">
                     Download URLs <span className="text-primary">*</span>
                   </label>
                   {formData.downloadUrls.map((url, index) => (
-                    <div key={index} className="flex space-x-2 mb-2">
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-2"
+                    >
                       <select
                         value={url.quality}
                         onChange={(e) =>
                           updateDownloadUrl(index, "quality", e.target.value)
                         }
-                        className="w-24 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                        className="w-full sm:w-24 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
                         required
                       >
                         <option value="360p">360p</option>
@@ -633,7 +634,7 @@ const PostTab = () => {
                         <option value="1080p">1080p</option>
                         <option value="4K">4K</option>
                       </select>
-                      <div className="flex items-center bg-[#2a2a2a] rounded-lg border border-primary/20">
+                      <div className="flex items-center bg-[#2a2a2a] rounded-lg border border-primary/20 w-full sm:w-auto">
                         <input
                           type="text"
                           placeholder="Size"
@@ -641,14 +642,14 @@ const PostTab = () => {
                           onChange={(e) =>
                             updateDownloadUrl(index, "size", e.target.value)
                           }
-                          className="w-20 bg-transparent text-white px-2 py-2 focus:outline-none"
+                          className="w-full sm:w-20 bg-transparent text-white px-2 py-2 focus:outline-none text-sm"
                         />
                         <select
                           value={url.sizeUnit || "GB"}
                           onChange={(e) =>
                             updateDownloadUrl(index, "sizeUnit", e.target.value)
                           }
-                          className="w-16 bg-transparent text-white px-1 py-2 focus:outline-none border-l border-primary/20 appearance-none cursor-pointer"
+                          className="w-16 bg-transparent text-white px-1 py-2 focus:outline-none border-l border-primary/20 text-sm"
                         >
                           <option value="MB">MB</option>
                           <option value="GB">GB</option>
@@ -661,7 +662,7 @@ const PostTab = () => {
                         onChange={(e) =>
                           updateDownloadUrl(index, "url", e.target.value)
                         }
-                        className="flex-1 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
+                        className="w-full bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
                         required
                       />
                       {index > 0 && (
@@ -670,7 +671,7 @@ const PostTab = () => {
                           onClick={() => removeDownloadUrl(index)}
                           className="px-2 py-2 text-red-500 hover:bg-red-500/10 rounded transition-colors"
                         >
-                          <TrashIcon className="w-5 h-5" />
+                          <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       )}
                     </div>
@@ -693,22 +694,22 @@ const PostTab = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, spotlight: e.target.checked })
                     }
-                    className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
+                    className="w-3 h-3 sm:w-4 sm:h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
                   />
                   <label
                     htmlFor="spotlight"
-                    className="text-secondary cursor-pointer"
+                    className="text-secondary text-sm sm:text-base cursor-pointer"
                   >
                     Add to Spotlight (Hero Slider)
                   </label>
                 </div>
 
-                {/* Form Actions */}
-                <div className="flex space-x-4 mt-6">
+                {/* Form Actions - Stack on mobile */}
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4 sm:mt-6">
                   <button
                     type="submit"
                     disabled={uploading || formData.genres.length === 0}
-                    className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-[#d00000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:flex-1 bg-primary text-white py-3 sm:py-2 rounded-lg hover:bg-[#d00000] transition-colors disabled:opacity-50 text-sm sm:text-base"
                   >
                     {uploading
                       ? "Uploading..."
@@ -722,7 +723,7 @@ const PostTab = () => {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 bg-[#2a2a2a] text-secondary py-2 rounded-lg hover:bg-[#3a3a3a] transition-colors"
+                    className="w-full sm:flex-1 bg-[#2a2a2a] text-secondary py-3 sm:py-2 rounded-lg hover:bg-[#3a3a3a] transition-colors text-sm sm:text-base"
                   >
                     Cancel
                   </button>

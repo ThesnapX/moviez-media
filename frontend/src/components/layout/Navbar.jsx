@@ -19,12 +19,13 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="group">
-              <h1 className="text-3xl font-['Bebas_Neue'] tracking-wider">
-                <span className="text-primary relative">
+              <h1 className="text-3xl font-['Bebas_Neue'] tracking-[0.02em]">
+                <span className="text-primary relative font-normal">
                   Moviez
                   <span className="absolute inset-0 blur-md bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
                 </span>
-                <span className="text-white relative">
+                <span className="text-white relative font-normal">
+                  {" "}
                   Media
                   <span className="absolute inset-0 blur-md bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
                 </span>

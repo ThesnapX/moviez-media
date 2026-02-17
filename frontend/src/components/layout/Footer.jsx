@@ -8,17 +8,17 @@ const Footer = () => {
           {/* About with logo */}
           <div>
             {/* Logo with softer glowing text effect */}
-            <Link to="/" className="group">
-              <h1 className="text-3xl font-['Bebas_Neue'] tracking-wider">
-                <span className="text-primary relative">
+            <Link to="/" className="group inline-block mb-4">
+              <h2 className="text-3xl font-['Bebas_Neue'] tracking-[-0.02em]">
+                <span className="text-primary relative font-normal">
                   Moviez
-                  <span className="absolute inset-0 blur-sm bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
+                  <span className="absolute inset-0 blur-md bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
                 </span>
-                <span className="text-white relative">
+                <span className="text-white relative font-normal">
                   Media
-                  <span className="absolute inset-0 blur-sm bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
+                  <span className="absolute inset-0 blur-md bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
                 </span>
-              </h1>
+              </h2>
             </Link>
             <p className="text-secondary/60 text-sm">
               Your ultimate destination for downloading movies, TV series, and
