@@ -13,6 +13,14 @@ const presetAvatars = generateAvatarPaths(20);
 
 const AvatarSelector = ({ selectedAvatar, onSelect }) => {
   const [hoveredAvatar, setHoveredAvatar] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
+
+  const handleImageError = (avatar, index) => {
+    setImageErrors((prev) => ({
+      ...prev,
+      [avatar]: true,
+    }));
+  };
 
   return (
     <div className="space-y-3">
@@ -20,39 +28,53 @@ const AvatarSelector = ({ selectedAvatar, onSelect }) => {
         Choose Profile Picture
       </label>
       <div className="grid grid-cols-6 gap-3 max-h-60 overflow-y-auto p-2 bg-[#2a2a2a] rounded-lg">
-        {presetAvatars.map((avatar, index) => (
-          <div
-            key={index}
-            className="relative cursor-pointer group"
-            onClick={() => onSelect(avatar)}
-            onMouseEnter={() => setHoveredAvatar(avatar)}
-            onMouseLeave={() => setHoveredAvatar(null)}
-          >
+        {presetAvatars.map((avatar, index) => {
+          const imageUrl = imageErrors[avatar]
+            ? `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/default-avatar.png`
+            : `${import.meta.env.VITE_BACKEND_URL}${avatar}`;
+
+          return (
             <div
-              className={`relative rounded-full overflow-hidden border-2 transition-all ${
-                selectedAvatar === avatar
-                  ? "border-primary scale-110 shadow-lg shadow-primary/50"
-                  : "border-transparent group-hover:border-primary/50"
-              }`}
+              key={index}
+              className="relative cursor-pointer group"
+              onClick={() => onSelect(avatar)}
+              onMouseEnter={() => setHoveredAvatar(avatar)}
+              onMouseLeave={() => setHoveredAvatar(null)}
             >
-              <img
-                src={`${import.meta.env.VITE_BACKEND_URL}${avatar}`}
-                alt={`Avatar ${index + 1}`}
-                className="w-12 h-12 object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/default-avatar.png`;
+              <div
+                className={`relative rounded-full overflow-hidden border-2 transition-all ${
+                  selectedAvatar === avatar
+                    ? "border-primary scale-110 shadow-lg shadow-primary/50"
+                    : "border-transparent group-hover:border-primary/50"
+                }`}
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "50%",
                 }}
-              />
+              >
+                <img
+                  src={imageUrl}
+                  alt={`Avatar ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                  onError={() => handleImageError(avatar, index)}
+                />
+              </div>
+              {selectedAvatar === avatar && (
+                <CheckCircleIcon className="absolute -top-1 -right-1 w-5 h-5 text-primary bg-white rounded-full" />
+              )}
+              {hoveredAvatar === avatar && selectedAvatar !== avatar && (
+                <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
+              )}
             </div>
-            {selectedAvatar === avatar && (
-              <CheckCircleIcon className="absolute -top-1 -right-1 w-5 h-5 text-primary bg-white rounded-full" />
-            )}
-            {hoveredAvatar === avatar && selectedAvatar !== avatar && (
-              <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
       <p className="text-xs text-secondary/60">
         Select an avatar to personalize your profile

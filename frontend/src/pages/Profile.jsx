@@ -50,17 +50,29 @@ const Profile = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
+        {/* Profile Header - Update this section */}
         <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6 border border-primary/20">
           <div className="flex items-center space-x-4">
-            {user.profilePicture ? (
+            <div
+              className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary"
+              style={{ borderRadius: "50%" }}
+            >
               <img
                 src={`${import.meta.env.VITE_BACKEND_URL}${selectedAvatar}`}
                 alt={user.name}
-                className="w-20 h-20 rounded-full object-cover border-2 border-primary"
+                className="w-full h-full object-cover"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/default-avatar.png`;
+                }}
               />
-            ) : (
-              <UserCircleIcon className="w-20 h-20 text-primary" />
-            )}
+            </div>
             <div>
               <h1 className="text-3xl text-primary">{user.name}</h1>
               <p className="text-secondary">{user.email}</p>

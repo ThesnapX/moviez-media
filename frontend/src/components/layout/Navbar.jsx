@@ -81,67 +81,35 @@ const Navbar = () => {
                 <BookmarkIcon className="w-6 h-6" />
               </button>
 
+              {/* In the user menu section, find the avatar button and update it */}
               {user ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-2"
                   >
-                    {user.profilePicture ? (
+                    <div
+                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary"
+                      style={{ borderRadius: "50%" }}
+                    >
                       <img
                         src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePicture}`}
                         alt={user.name}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-primary"
-                      />
-                    ) : (
-                      <UserCircleIcon className="w-8 h-8 text-primary" />
-                    )}
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-xl border border-primary/20 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-secondary/20">
-                        <p className="font-semibold text-secondary">
-                          {user.name}
-                        </p>
-                        <p className="text-sm text-secondary/60">
-                          {user.email}
-                        </p>
-                      </div>
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-secondary hover:bg-primary/10 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        Profile
-                      </Link>
-                      {user.role === "admin" && (
-                        <Link
-                          to="/admin"
-                          className="block px-4 py-2 text-secondary hover:bg-primary/10 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          Admin Dashboard
-                        </Link>
-                      )}
-                      <Link
-                        to="/request-movie"
-                        className="block px-4 py-2 text-secondary hover:bg-primary/10 transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        Request Movie
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setShowUserMenu(false);
+                        className="w-full h-full object-cover"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "50%",
                         }}
-                        className="block w-full text-left px-4 py-2 text-primary hover:bg-primary/10 transition-colors"
-                      >
-                        Logout
-                      </button>
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/default-avatar.png`;
+                        }}
+                      />
                     </div>
-                  )}
+                  </button>
+                  {/* ... rest of the user menu code ... */}
                 </div>
               ) : (
                 <button
