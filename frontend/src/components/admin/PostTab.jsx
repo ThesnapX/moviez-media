@@ -6,6 +6,7 @@ import {
   PencilIcon,
   TrashIcon,
   PhotoIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 const PostTab = () => {
@@ -26,7 +27,7 @@ const PostTab = () => {
     quality: "HD",
     imdbRating: "",
     genres: [],
-    downloadUrls: [{ quality: "1080p", size: "", url: "" }],
+    downloadUrls: [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }],
     spotlight: false,
   });
 
@@ -36,9 +37,26 @@ const PostTab = () => {
   const [verticalPreview, setVerticalPreview] = useState("");
   const [horizontalPreview, setHorizontalPreview] = useState("");
 
+  // New states for upload preview
+  const [verticalUploadPreview, setVerticalUploadPreview] = useState("");
+  const [horizontalUploadPreview, setHorizontalUploadPreview] = useState("");
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && showModal) {
+        setShowModal(false);
+        resetForm();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => document.removeEventListener("keydown", handleEscKey);
+  }, [showModal]);
 
   const fetchData = async () => {
     try {
@@ -76,9 +94,11 @@ const PostTab = () => {
     reader.onloadend = () => {
       if (type === "vertical") {
         setVerticalPreview(reader.result);
+        setVerticalUploadPreview(reader.result);
         setVerticalPoster(file);
       } else {
         setHorizontalPreview(reader.result);
+        setHorizontalUploadPreview(reader.result);
         setHorizontalPoster(file);
       }
     };
@@ -171,18 +191,28 @@ const PostTab = () => {
       quality: "HD",
       imdbRating: "",
       genres: [],
-      downloadUrls: [{ quality: "1080p", size: "", url: "" }],
+      downloadUrls: [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }],
       spotlight: false,
     });
     setVerticalPoster(null);
     setHorizontalPoster(null);
     setVerticalPreview("");
     setHorizontalPreview("");
+    setVerticalUploadPreview("");
+    setHorizontalUploadPreview("");
     setEditingMovie(null);
   };
 
   const openEditModal = (movie) => {
     setEditingMovie(movie);
+
+    // Format download URLs with size unit
+    const downloadUrls = movie.downloadUrls?.map((url) => ({
+      ...url,
+      sizeUnit: url.size?.match(/[a-zA-Z]+$/)?.[0] || "GB",
+      size: url.size?.replace(/[a-zA-Z]+$/, "") || "",
+    })) || [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }];
+
     setFormData({
       title: movie.title,
       description: movie.description,
@@ -193,9 +223,7 @@ const PostTab = () => {
       quality: movie.quality || "HD",
       imdbRating: movie.imdbRating,
       genres: movie.genres.map((g) => g._id || g),
-      downloadUrls: movie.downloadUrls || [
-        { quality: "1080p", size: "", url: "" },
-      ],
+      downloadUrls,
       spotlight: movie.spotlight,
     });
     setVerticalPreview(
@@ -212,7 +240,7 @@ const PostTab = () => {
       ...formData,
       downloadUrls: [
         ...formData.downloadUrls,
-        { quality: "1080p", size: "", url: "" },
+        { quality: "1080p", size: "", sizeUnit: "GB", url: "" },
       ],
     });
   };
@@ -258,9 +286,24 @@ const PostTab = () => {
           <div className="flex items-center justify-center min-h-screen p-4">
             <div
               className="fixed inset-0 blur-backdrop"
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                resetForm();
+              }}
             ></div>
             <div className="relative bg-[#1a1a1a] rounded-lg w-full max-w-3xl p-6 border border-primary/20 max-h-[90vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
+                className="absolute top-4 right-4 text-secondary hover:text-primary transition-colors z-10"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+
               <h3 className="text-xl mb-4 text-primary">
                 {editingMovie ? "Edit Post" : "Add New Post"}
               </h3>
@@ -269,25 +312,30 @@ const PostTab = () => {
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-secondary mb-1">Title</label>
+                    <label className="block text-secondary mb-1">
+                      Title <span className="text-primary">*</span>
+                    </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) =>
                         setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-secondary mb-1">Type</label>
+                    <label className="block text-secondary mb-1">
+                      Type <span className="text-primary">*</span>
+                    </label>
                     <select
                       value={formData.type}
                       onChange={(e) =>
                         setFormData({ ...formData, type: e.target.value })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                      required
                     >
                       <option value="movie">Movie</option>
                       <option value="tv-series">TV Series</option>
@@ -298,7 +346,7 @@ const PostTab = () => {
 
                 <div>
                   <label className="block text-secondary mb-1">
-                    Description
+                    Description <span className="text-primary">*</span>
                   </label>
                   <textarea
                     value={formData.description}
@@ -306,7 +354,7 @@ const PostTab = () => {
                       setFormData({ ...formData, description: e.target.value })
                     }
                     rows="4"
-                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                     required
                   />
                 </div>
@@ -314,7 +362,7 @@ const PostTab = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-secondary mb-1">
-                      Release Date
+                      Release Date <span className="text-primary">*</span>
                     </label>
                     <input
                       type="date"
@@ -325,12 +373,12 @@ const PostTab = () => {
                           releaseDate: e.target.value,
                         })
                       }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                       required
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="block text-secondary mb-1">
                         Duration
@@ -342,7 +390,7 @@ const PostTab = () => {
                           setFormData({ ...formData, duration: e.target.value })
                         }
                         placeholder="e.g., 2h 30m"
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                       />
                     </div>
 
@@ -358,7 +406,7 @@ const PostTab = () => {
                             ageRating: e.target.value,
                           })
                         }
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
                       >
                         <option value="G">G</option>
                         <option value="PG">PG</option>
@@ -383,7 +431,7 @@ const PostTab = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, quality: e.target.value })
                         }
-                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
                       >
                         <option value="HD">HD</option>
                         <option value="FHD">FHD</option>
@@ -408,10 +456,21 @@ const PostTab = () => {
                     min="0"
                     max="10"
                     value={formData.imdbRating}
-                    onChange={(e) =>
-                      setFormData({ ...formData, imdbRating: e.target.value })
-                    }
-                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    onChange={(e) => {
+                      const value = Math.min(
+                        10,
+                        Math.max(0, parseFloat(e.target.value) || 0),
+                      );
+                      setFormData({ ...formData, imdbRating: value });
+                    }}
+                    onBlur={(e) => {
+                      const value = Math.min(
+                        10,
+                        Math.max(0, parseFloat(e.target.value) || 0),
+                      );
+                      setFormData({ ...formData, imdbRating: value });
+                    }}
+                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                   />
                 </div>
 
@@ -420,13 +479,13 @@ const PostTab = () => {
                   {/* Vertical Poster */}
                   <div>
                     <label className="block text-secondary mb-1">
-                      Vertical Poster
+                      Vertical Poster <span className="text-primary">*</span>
                     </label>
                     <div className="border-2 border-dashed border-primary/30 rounded-lg p-4 text-center">
-                      {verticalPreview ? (
+                      {verticalPreview || verticalUploadPreview ? (
                         <div className="relative">
                           <img
-                            src={verticalPreview}
+                            src={verticalUploadPreview || verticalPreview}
                             alt="Vertical preview"
                             className="max-h-40 mx-auto rounded-lg"
                           />
@@ -435,6 +494,7 @@ const PostTab = () => {
                             onClick={() => {
                               setVerticalPoster(null);
                               setVerticalPreview("");
+                              setVerticalUploadPreview("");
                             }}
                             className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
                           >
@@ -453,6 +513,7 @@ const PostTab = () => {
                               accept="image/*"
                               onChange={(e) => handleFileChange(e, "vertical")}
                               className="hidden"
+                              required={!editingMovie}
                             />
                           </label>
                           <p className="text-xs text-secondary/50 mt-2">
@@ -466,13 +527,13 @@ const PostTab = () => {
                   {/* Horizontal Poster */}
                   <div>
                     <label className="block text-secondary mb-1">
-                      Horizontal Poster
+                      Horizontal Poster <span className="text-primary">*</span>
                     </label>
                     <div className="border-2 border-dashed border-primary/30 rounded-lg p-4 text-center">
-                      {horizontalPreview ? (
+                      {horizontalPreview || horizontalUploadPreview ? (
                         <div className="relative">
                           <img
-                            src={horizontalPreview}
+                            src={horizontalUploadPreview || horizontalPreview}
                             alt="Horizontal preview"
                             className="max-h-40 mx-auto rounded-lg"
                           />
@@ -481,6 +542,7 @@ const PostTab = () => {
                             onClick={() => {
                               setHorizontalPoster(null);
                               setHorizontalPreview("");
+                              setHorizontalUploadPreview("");
                             }}
                             className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
                           >
@@ -501,6 +563,7 @@ const PostTab = () => {
                                 handleFileChange(e, "horizontal")
                               }
                               className="hidden"
+                              required={!editingMovie}
                             />
                           </label>
                           <p className="text-xs text-secondary/50 mt-2">
@@ -514,12 +577,14 @@ const PostTab = () => {
 
                 {/* Genres */}
                 <div>
-                  <label className="block text-secondary mb-2">Genres</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <label className="block text-secondary mb-2">
+                    Genres <span className="text-primary">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-[#2a2a2a] rounded-lg border border-primary/20">
                     {genres.map((genre) => (
                       <label
                         key={genre._id}
-                        className="flex items-center space-x-2"
+                        className="flex items-center space-x-2 cursor-pointer hover:text-primary transition-colors"
                       >
                         <input
                           type="checkbox"
@@ -532,7 +597,7 @@ const PostTab = () => {
                                 );
                             setFormData({ ...formData, genres: newGenres });
                           }}
-                          className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary"
+                          className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
                         />
                         <span className="text-secondary text-sm">
                           {genre.name}
@@ -540,12 +605,17 @@ const PostTab = () => {
                       </label>
                     ))}
                   </div>
+                  {formData.genres.length === 0 && (
+                    <p className="text-primary text-xs mt-1">
+                      Select at least one genre
+                    </p>
+                  )}
                 </div>
 
                 {/* Download URLs */}
                 <div>
                   <label className="block text-secondary mb-2">
-                    Download URLs
+                    Download URLs <span className="text-primary">*</span>
                   </label>
                   {formData.downloadUrls.map((url, index) => (
                     <div key={index} className="flex space-x-2 mb-2">
@@ -554,7 +624,8 @@ const PostTab = () => {
                         onChange={(e) =>
                           updateDownloadUrl(index, "quality", e.target.value)
                         }
-                        className="w-24 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-24 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 appearance-none cursor-pointer"
+                        required
                       >
                         <option value="360p">360p</option>
                         <option value="480p">480p</option>
@@ -562,15 +633,27 @@ const PostTab = () => {
                         <option value="1080p">1080p</option>
                         <option value="4K">4K</option>
                       </select>
-                      <input
-                        type="text"
-                        placeholder="Size (e.g., 1.5GB)"
-                        value={url.size}
-                        onChange={(e) =>
-                          updateDownloadUrl(index, "size", e.target.value)
-                        }
-                        className="w-24 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
+                      <div className="flex items-center bg-[#2a2a2a] rounded-lg border border-primary/20">
+                        <input
+                          type="text"
+                          placeholder="Size"
+                          value={url.size}
+                          onChange={(e) =>
+                            updateDownloadUrl(index, "size", e.target.value)
+                          }
+                          className="w-20 bg-transparent text-white px-2 py-2 focus:outline-none"
+                        />
+                        <select
+                          value={url.sizeUnit || "GB"}
+                          onChange={(e) =>
+                            updateDownloadUrl(index, "sizeUnit", e.target.value)
+                          }
+                          className="w-16 bg-transparent text-white px-1 py-2 focus:outline-none border-l border-primary/20 appearance-none cursor-pointer"
+                        >
+                          <option value="MB">MB</option>
+                          <option value="GB">GB</option>
+                        </select>
+                      </div>
                       <input
                         type="url"
                         placeholder="Download URL"
@@ -578,7 +661,7 @@ const PostTab = () => {
                         onChange={(e) =>
                           updateDownloadUrl(index, "url", e.target.value)
                         }
-                        className="flex-1 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20"
                         required
                       />
                       {index > 0 && (
@@ -610,9 +693,12 @@ const PostTab = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, spotlight: e.target.checked })
                     }
-                    className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary"
+                    className="w-4 h-4 text-primary bg-[#2a2a2a] border-primary/20 rounded focus:ring-primary cursor-pointer"
                   />
-                  <label htmlFor="spotlight" className="text-secondary">
+                  <label
+                    htmlFor="spotlight"
+                    className="text-secondary cursor-pointer"
+                  >
                     Add to Spotlight (Hero Slider)
                   </label>
                 </div>
@@ -621,8 +707,8 @@ const PostTab = () => {
                 <div className="flex space-x-4 mt-6">
                   <button
                     type="submit"
-                    disabled={uploading}
-                    className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-[#d00000] transition-colors disabled:opacity-50"
+                    disabled={uploading || formData.genres.length === 0}
+                    className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-[#d00000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploading
                       ? "Uploading..."
@@ -647,15 +733,15 @@ const PostTab = () => {
         </div>
       )}
 
-      {/* Movies List - Fixed to show vertical posters with action buttons overlay */}
+      {/* Movies List */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {movies.map((movie) => (
           <div
             key={movie._id}
-            className="relative group  rounded-lg overflow-hidden transition-all"
+            className="relative group overflow-hidden transition-all"
           >
-            {/* Poster Image - Vertical format like movie card */}
-            <div className="relative aspect-[2/3] overflow-hidden">
+            {/* Poster Image */}
+            <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
               <img
                 src={
                   movie.posterVertical?.url ||
@@ -668,7 +754,7 @@ const PostTab = () => {
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-              {/* Action Buttons - Positioned like save icon in movie card */}
+              {/* Action Buttons */}
               <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <button
                   onClick={() => openEditModal(movie)}

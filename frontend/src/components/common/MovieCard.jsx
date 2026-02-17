@@ -16,14 +16,25 @@ const MovieCard = ({ movie }) => {
     top: 0,
     show: false,
   });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const cardRef = useRef(null);
   const popupRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
-  const popupWidth = 320; // w-80 = 20rem = 320px
-  const popupHeight = 400; // Approximate height
+  const popupWidth = 320;
+  const popupHeight = 400;
   const isHoveringRef = useRef(false);
   const isHoveringPopupRef = useRef(false);
+
+  // Check if mobile on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Check if movie is in watchlist on mount and when user changes
   useEffect(() => {
@@ -34,20 +45,20 @@ const MovieCard = ({ movie }) => {
     }
   }, [user, movie, checkInWatchlist]);
 
-  // Handle mouse enter on card
+  // Handle mouse enter on card (desktop only)
   const handleMouseEnter = () => {
+    if (isMobile) return; // Disable hover on mobile
     isHoveringRef.current = true;
-    // Clear any pending hide timeout
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
     calculatePosition();
   };
 
-  // Handle mouse leave on card
+  // Handle mouse leave on card (desktop only)
   const handleMouseLeave = () => {
+    if (isMobile) return; // Disable hover on mobile
     isHoveringRef.current = false;
-    // Add small delay before hiding to allow moving to popup
     hoverTimeoutRef.current = setTimeout(() => {
       if (!isHoveringPopupRef.current) {
         setPopupPosition((prev) => ({ ...prev, show: false }));
@@ -55,22 +66,27 @@ const MovieCard = ({ movie }) => {
     }, 100);
   };
 
-  // Handle mouse enter on popup
+  // Handle mouse enter on popup (desktop only)
   const handlePopupMouseEnter = () => {
+    if (isMobile) return; // Disable hover on mobile
     isHoveringPopupRef.current = true;
-    // Clear any pending hide timeout
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
   };
 
-  // Handle mouse leave on popup
+  // Handle mouse leave on popup (desktop only)
   const handlePopupMouseLeave = () => {
+    if (isMobile) return; // Disable hover on mobile
     isHoveringPopupRef.current = false;
-    // Only hide if not hovering over card either
     if (!isHoveringRef.current) {
       setPopupPosition((prev) => ({ ...prev, show: false }));
     }
+  };
+
+  // Handle card click - navigate to details page (mobile and desktop)
+  const handleCardClick = () => {
+    navigate(`/movie/${movie._id}`);
   };
 
   // Handle save/unsave
@@ -93,28 +109,23 @@ const MovieCard = ({ movie }) => {
 
   // Calculate popup position based on viewport
   const calculatePosition = () => {
-    if (!cardRef.current || !isHoveringRef.current) return;
+    if (!cardRef.current || !isHoveringRef.current || isMobile) return;
 
     const cardRect = cardRef.current.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Calculate available space on right and left
     const spaceOnRight = viewportWidth - cardRect.right;
     const spaceOnLeft = cardRect.left;
 
-    // Determine which side has more space
     const side = spaceOnRight >= popupWidth ? "right" : "left";
 
-    // Calculate vertical position (center aligned with card)
     let top = cardRect.top + cardRect.height / 2 - popupHeight / 2;
 
-    // Check bottom overflow
     if (top + popupHeight > viewportHeight) {
       top = viewportHeight - popupHeight - 10;
     }
 
-    // Check top overflow
     if (top < 10) {
       top = 10;
     }
@@ -129,12 +140,10 @@ const MovieCard = ({ movie }) => {
   // Handle scroll - hide popup when scrolling
   useEffect(() => {
     const handleScroll = () => {
-      if (popupPosition.show) {
-        // Check if mouse is still over the card or popup
+      if (popupPosition.show && !isMobile) {
         if (!isHoveringRef.current && !isHoveringPopupRef.current) {
           setPopupPosition((prev) => ({ ...prev, show: false }));
         } else {
-          // Reposition if still hovering
           calculatePosition();
         }
       }
@@ -142,13 +151,14 @@ const MovieCard = ({ movie }) => {
 
     window.addEventListener("scroll", handleScroll, true);
     return () => window.removeEventListener("scroll", handleScroll, true);
-  }, [popupPosition.show]);
+  }, [popupPosition.show, isMobile]);
 
   // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (
         popupPosition.show &&
+        !isMobile &&
         (isHoveringRef.current || isHoveringPopupRef.current)
       ) {
         calculatePosition();
@@ -157,7 +167,7 @@ const MovieCard = ({ movie }) => {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [popupPosition.show]);
+  }, [popupPosition.show, isMobile]);
 
   // Handle click outside
   useEffect(() => {
@@ -202,7 +212,7 @@ const MovieCard = ({ movie }) => {
       {/* Thumbnail - Make it clickable */}
       <div
         className="relative overflow-hidden rounded-lg cursor-pointer"
-        onClick={() => navigate(`/movie/${movie._id}`)}
+        onClick={handleCardClick}
       >
         <img
           src={
@@ -212,23 +222,26 @@ const MovieCard = ({ movie }) => {
           alt={movie.title}
           className="w-full h-[300px] object-cover transition-transform duration-300"
           style={{
-            transform: popupPosition.show ? "scale(1.1)" : "scale(1)",
+            transform:
+              popupPosition.show && !isMobile ? "scale(1.1)" : "scale(1)",
           }}
         />
 
-        {/* Hover overlay */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${
-            popupPosition.show ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="flex items-center space-x-1 text-yellow-500 text-sm">
-              <span>★</span>
-              <span>{movie.imdbRating || "N/A"}</span>
+        {/* Hover overlay - only show on desktop when popup is visible */}
+        {!isMobile && (
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${
+              popupPosition.show ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="absolute bottom-2 left-2 right-2">
+              <div className="flex items-center space-x-1 text-yellow-500 text-sm">
+                <span>★</span>
+                <span>{movie.imdbRating || "N/A"}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Watchlist indicator on thumbnail */}
         {isSaved && (
@@ -239,12 +252,12 @@ const MovieCard = ({ movie }) => {
       </div>
 
       {/* Title */}
-      <h3 className="mt-2 text-center text-secondary truncate text-xl font-medium">
+      <h3 className="mt-2 text-center text-secondary truncate text-lg font-medium">
         {movie.title}
       </h3>
 
-      {/* Popup */}
-      {popupPosition.show && (
+      {/* Popup - Only show on desktop */}
+      {!isMobile && popupPosition.show && (
         <div
           ref={popupRef}
           className="fixed z-50"
@@ -287,7 +300,7 @@ const MovieCard = ({ movie }) => {
 
                   {/* Title overlay */}
                   <div className="absolute bottom-2 left-3 right-3">
-                    <h4 className="text-2xl text-white truncate drop-shadow-lg">
+                    <h4 className="text-lg font-bold text-white truncate drop-shadow-lg">
                       {movie.title}
                     </h4>
                   </div>
@@ -349,7 +362,7 @@ const MovieCard = ({ movie }) => {
                   {/* Actions */}
                   <div className="flex items-center justify-between">
                     <button
-                      onClick={() => navigate(`/movie/${movie._id}`)}
+                      onClick={handleCardClick}
                       className="flex-1 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all mr-2 shadow-lg shadow-primary/20"
                     >
                       Download
