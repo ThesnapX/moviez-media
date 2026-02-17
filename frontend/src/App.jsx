@@ -17,6 +17,7 @@ import Watchlist from "./pages/Watchlist";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import MovieDetails from "./pages/MovieDetails"; // Add this import
+import RequestMovie from "./pages/RequestMovie";
 
 // Context
 import { AuthProvider } from "./context/AuthContext";
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/movie/:id" element={<MovieDetails />} />{" "}
                 <Route path="/watchlist" element={<Watchlist />} />
+                <Route path="/request-movie" element={<RequestMovie />} />
                 {/* Add this route */}
               </Routes>
             </main>

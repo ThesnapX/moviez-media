@@ -239,7 +239,7 @@ const MovieCard = ({ movie }) => {
       </div>
 
       {/* Title */}
-      <h3 className="mt-2 text-center text-secondary truncate text-sm font-medium">
+      <h3 className="mt-2 text-center text-secondary truncate text-xl font-medium">
         {movie.title}
       </h3>
 
@@ -287,7 +287,7 @@ const MovieCard = ({ movie }) => {
 
                   {/* Title overlay */}
                   <div className="absolute bottom-2 left-3 right-3">
-                    <h4 className="text-lg font-bold text-white truncate drop-shadow-lg">
+                    <h4 className="text-2xl text-white truncate drop-shadow-lg">
                       {movie.title}
                     </h4>
                   </div>

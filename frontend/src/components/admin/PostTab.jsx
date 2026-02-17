@@ -660,9 +660,7 @@ const PostTab = () => {
             <div className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-lg font-semibold text-white">
-                    {movie.title}
-                  </h4>
+                  <h4 className="text-xl  text-white">{movie.title}</h4>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs text-primary uppercase">
                       {movie.type}

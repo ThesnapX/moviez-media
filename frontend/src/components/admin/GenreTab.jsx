@@ -155,9 +155,7 @@ const GenreTab = () => {
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-white mb-1">
-                  {genre.name}
-                </h4>
+                <h4 className="text-xl  text-white mb-1">{genre.name}</h4>
                 <p className="text-xs text-secondary/60">
                   Added: {new Date(genre.createdAt).toLocaleDateString()}
                 </p>
