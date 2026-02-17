@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { BookmarkIcon as BookmarkOutline } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const MovieCard = ({ movie }) => {
   const { user } = useAuth();
@@ -17,6 +18,8 @@ const MovieCard = ({ movie }) => {
   const popupWidth = 320; // w-80 = 20rem = 320px
   const popupHeight = 400; // Approximate height
   const isHoveringRef = useRef(false);
+
+  const navigate = useNavigate();
 
   // Handle mouse enter - INSTANT (no delay)
   const handleMouseEnter = () => {
@@ -125,8 +128,11 @@ const MovieCard = ({ movie }) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Thumbnail */}
-      <div className="relative overflow-hidden rounded-lg cursor-pointer">
+      {/* Thumbnail - Make it clickable */}
+      <div
+        className="relative overflow-hidden rounded-lg cursor-pointer"
+        onClick={() => navigate(`/movie/${movie._id}`)}
+      >
         <img
           src={
             movie.posterVertical?.url ||
@@ -255,13 +261,19 @@ const MovieCard = ({ movie }) => {
 
                   {/* Actions */}
                   <div className="flex items-center justify-between">
-                    <button className="flex-1 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all mr-2 shadow-lg shadow-primary/20">
-                      Watch now
+                    <button
+                      onClick={() => navigate(`/movie/${movie._id}`)}
+                      className="flex-1 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all mr-2 shadow-lg shadow-primary/20"
+                    >
+                      Download
                     </button>
 
                     {user && (
                       <button
-                        onClick={() => setIsSaved(!isSaved)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsSaved(!isSaved);
+                        }}
                         className="p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all"
                       >
                         {isSaved ? (

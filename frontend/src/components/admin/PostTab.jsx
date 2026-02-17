@@ -21,6 +21,9 @@ const PostTab = () => {
     description: "",
     type: "movie",
     releaseDate: "",
+    duration: "",
+    ageRating: "PG-13",
+    quality: "HD",
     imdbRating: "",
     genres: [],
     downloadUrls: [{ quality: "1080p", size: "", url: "" }],
@@ -320,6 +323,75 @@ const PostTab = () => {
                       required
                     />
                   </div>
+
+                  {/* Add after Release Date and before IMDB Rating */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-secondary mb-1">
+                        Duration
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.duration}
+                        onChange={(e) =>
+                          setFormData({ ...formData, duration: e.target.value })
+                        }
+                        placeholder="e.g., 2h 30m or 24min per ep"
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-secondary mb-1">
+                        Age Rating
+                      </label>
+                      <select
+                        value={formData.ageRating}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            ageRating: e.target.value,
+                          })
+                        }
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="G">G</option>
+                        <option value="PG">PG</option>
+                        <option value="PG-13">PG-13</option>
+                        <option value="R">R</option>
+                        <option value="NC-17">NC-17</option>
+                        <option value="TV-Y">TV-Y</option>
+                        <option value="TV-Y7">TV-Y7</option>
+                        <option value="TV-G">TV-G</option>
+                        <option value="TV-PG">TV-PG</option>
+                        <option value="TV-14">TV-14</option>
+                        <option value="TV-MA">TV-MA</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-secondary mb-1">
+                        Quality
+                      </label>
+                      <select
+                        value={formData.quality}
+                        onChange={(e) =>
+                          setFormData({ ...formData, quality: e.target.value })
+                        }
+                        className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="HD">HD</option>
+                        <option value="FHD">FHD</option>
+                        <option value="WebRIP">WebRIP</option>
+                        <option value="BluRay">BluRay</option>
+                        <option value="DVD">DVD</option>
+                        <option value="CAM">CAM</option>
+                        <option value="TS">TS</option>
+                        <option value="HDTV">HDTV</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-secondary mb-1">
                       IMDB Rating (0-10)

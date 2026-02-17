@@ -16,6 +16,7 @@ import Popular from "./pages/Popular";
 import Watchlist from "./pages/Watchlist";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import MovieDetails from "./pages/MovieDetails"; // Add this import
 
 // Context
 import { AuthProvider } from "./context/AuthContext";
@@ -43,6 +44,8 @@ function App() {
                 <Route path="/watchlist" element={<Watchlist />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
+                <Route path="/movie/:id" element={<MovieDetails />} />{" "}
+                {/* Add this route */}
               </Routes>
             </main>
 
