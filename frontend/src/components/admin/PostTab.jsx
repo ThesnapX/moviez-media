@@ -166,6 +166,9 @@ const PostTab = () => {
       description: "",
       type: "movie",
       releaseDate: "",
+      duration: "",
+      ageRating: "PG-13",
+      quality: "HD",
       imdbRating: "",
       genres: [],
       downloadUrls: [{ quality: "1080p", size: "", url: "" }],
@@ -185,6 +188,9 @@ const PostTab = () => {
       description: movie.description,
       type: movie.type,
       releaseDate: movie.releaseDate.split("T")[0],
+      duration: movie.duration || "",
+      ageRating: movie.ageRating || "PG-13",
+      quality: movie.quality || "HD",
       imdbRating: movie.imdbRating,
       genres: movie.genres.map((g) => g._id || g),
       downloadUrls: movie.downloadUrls || [
@@ -324,7 +330,6 @@ const PostTab = () => {
                     />
                   </div>
 
-                  {/* Add after Release Date and before IMDB Rating */}
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-secondary mb-1">
@@ -336,7 +341,7 @@ const PostTab = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, duration: e.target.value })
                         }
-                        placeholder="e.g., 2h 30m or 24min per ep"
+                        placeholder="e.g., 2h 30m"
                         className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
@@ -391,23 +396,23 @@ const PostTab = () => {
                       </select>
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-secondary mb-1">
-                      IMDB Rating (0-10)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
-                      value={formData.imdbRating}
-                      onChange={(e) =>
-                        setFormData({ ...formData, imdbRating: e.target.value })
-                      }
-                      className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-secondary mb-1">
+                    IMDB Rating (0-10)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    value={formData.imdbRating}
+                    onChange={(e) =>
+                      setFormData({ ...formData, imdbRating: e.target.value })
+                    }
+                    className="w-full bg-[#2a2a2a] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
 
                 {/* File Uploads */}
@@ -642,54 +647,76 @@ const PostTab = () => {
         </div>
       )}
 
-      {/* Movies List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Movies List - Fixed to show vertical posters with action buttons overlay */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {movies.map((movie) => (
           <div
             key={movie._id}
-            className="bg-[#2a2a2a] rounded-lg overflow-hidden border border-primary/20"
+            className="relative group  rounded-lg overflow-hidden transition-all"
           >
-            <img
-              src={
-                movie.posterVertical?.url ||
-                `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical}`
-              }
-              alt={movie.title}
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-xl  text-white">{movie.title}</h4>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-primary uppercase">
-                      {movie.type}
-                    </span>
-                    {movie.spotlight && (
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                        Spotlight
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-yellow-500 text-sm mt-1">
-                    ★ {movie.imdbRating}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => openEditModal(movie)}
-                    className="p-1 text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(movie._id)}
-                    className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                </div>
+            {/* Poster Image - Vertical format like movie card */}
+            <div className="relative aspect-[2/3] overflow-hidden">
+              <img
+                src={
+                  movie.posterVertical?.url ||
+                  `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical}`
+                }
+                alt={movie.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+              {/* Action Buttons - Positioned like save icon in movie card */}
+              <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button
+                  onClick={() => openEditModal(movie)}
+                  className="p-2 bg-blue-500/80 backdrop-blur-sm rounded-full hover:bg-blue-600 transition-colors"
+                  title="Edit movie"
+                >
+                  <PencilIcon className="w-4 h-4 text-white" />
+                </button>
+                <button
+                  onClick={() => handleDelete(movie._id)}
+                  className="p-2 bg-red-500/80 backdrop-blur-sm rounded-full hover:bg-red-600 transition-colors"
+                  title="Delete movie"
+                >
+                  <TrashIcon className="w-4 h-4 text-white" />
+                </button>
               </div>
+
+              {/* Spotlight Badge */}
+              {movie.spotlight && (
+                <div className="absolute top-2 left-2 z-10">
+                  <span className="px-2 py-1 bg-primary/80 backdrop-blur-sm text-white text-xs rounded-full">
+                    Spotlight
+                  </span>
+                </div>
+              )}
+
+              {/* Type Badge */}
+              <div className="absolute bottom-2 left-2 z-10">
+                <span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full capitalize">
+                  {movie.type.replace("-", " ")}
+                </span>
+              </div>
+
+              {/* Rating Badge */}
+              {movie.imdbRating && (
+                <div className="absolute bottom-2 right-2 z-10">
+                  <span className="px-2 py-1 bg-yellow-500/80 backdrop-blur-sm text-white text-xs rounded-full flex items-center">
+                    ★ {movie.imdbRating}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div className="p-2">
+              <h4 className="text-sm text-white truncate text-center">
+                {movie.title}
+              </h4>
             </div>
           </div>
         ))}
