@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useMovies } from "../context/MovieContext";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import Comments from "../components/common/Comments";
 import { toast } from "react-toastify";
 import {
   BookmarkIcon as BookmarkOutline,
@@ -393,6 +394,9 @@ const MovieDetails = () => {
           </div>
         </div>
       )}
+      <div className="container mx-auto px-4 py-12">
+        <Comments movieId={id} />
+      </div>
     </div>
   );
 };

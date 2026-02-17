@@ -32,7 +32,7 @@ const DashboardTab = () => {
   const fetchDashboardData = async () => {
     try {
       const response = await axios.get(`${backendUrl}/api/admin/dashboard`);
-      console.log("Dashboard data:", response.data); // Debug log
+      console.log("Dashboard data:", response.data);
       setStats(response.data.stats);
       setLatestComments(response.data.latestComments);
       setLatestUsers(response.data.latestUsers);
@@ -43,26 +43,24 @@ const DashboardTab = () => {
     }
   };
 
-  // Helper function to get full image URL
   const getProfileImageUrl = (profilePath) => {
     if (!profilePath) return null;
-
-    // Log the profile path for debugging
-    console.log("Dashboard - Profile path:", profilePath);
-
-    // If it's already a full URL, return as is
     if (profilePath.startsWith("http")) return profilePath;
-
-    // Make sure the path starts with a slash
     const normalizedPath = profilePath.startsWith("/")
       ? profilePath
       : `/${profilePath}`;
+    return `${backendUrl}${normalizedPath}`;
+  };
 
-    // Construct the full URL
-    const fullUrl = `${backendUrl}${normalizedPath}`;
-    console.log("Dashboard - Full image URL:", fullUrl);
-
-    return fullUrl;
+  const handleImageError = (e, userName) => {
+    e.target.onerror = null;
+    e.target.style.display = "none";
+    const parent = e.target.parentElement;
+    const fallback = document.createElement("div");
+    fallback.className =
+      "w-full h-full bg-primary/20 flex items-center justify-center";
+    fallback.innerHTML = `<span class="text-primary text-sm">${userName?.charAt(0).toUpperCase() || "U"}</span>`;
+    parent.appendChild(fallback);
   };
 
   const statCards = [
@@ -120,7 +118,7 @@ const DashboardTab = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-secondary text-sm">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-2xl text-white">{stat.value}</p>
                 </div>
                 <Icon className={`w-8 h-8 ${stat.color}`} />
               </div>
@@ -132,48 +130,41 @@ const DashboardTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Latest Comments */}
         <div>
-          <h3 className="text-xl mb-4 text-primary">Latest Comments</h3>
+          <h3 className="text-xl mb-4 text-primary tracking-wide">
+            Latest Comments
+          </h3>
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
             {latestComments.length > 0 ? (
-              latestComments.map((comment) => (
+              latestComments.slice(0, 5).map((comment) => (
                 <div
                   key={comment._id}
                   className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/10"
                 >
                   <div className="flex items-start space-x-3">
-                    {comment.user?.profilePicture ? (
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                    {/* User Avatar */}
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                      {comment.user?.profilePicture ? (
                         <img
                           src={getProfileImageUrl(comment.user.profilePicture)}
                           alt={comment.user.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.log(
-                              "Comment image failed to load for user:",
-                              comment.user.name,
-                            );
-                            e.target.onerror = null;
-                            e.target.style.display = "none";
-                            e.target.parentElement.innerHTML = `
-                              <div class="w-full h-full bg-primary/20 flex items-center justify-center">
-                                <span class="text-primary text-sm font-semibold">
-                                  ${comment.user.name?.charAt(0).toUpperCase() || "U"}
-                                </span>
-                              </div>
-                            `;
-                          }}
+                          onError={(e) =>
+                            handleImageError(e, comment.user.name)
+                          }
                         />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
-                        <span className="text-primary text-sm font-semibold">
-                          {comment.user?.name?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-primary text-sm">
+                            {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Comment Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between flex-wrap gap-2">
-                        <h4 className="font-semibold text-white truncate">
+                        <h4 className="text-white truncate">
                           {comment.user?.name}
                         </h4>
                         <span className="text-xs text-secondary/60 whitespace-nowrap">
@@ -182,7 +173,7 @@ const DashboardTab = () => {
                           })}
                         </span>
                       </div>
-                      <p className="text-secondary text-sm mt-1 line-clamp-2">
+                      <p className="text-secondary/80 text-sm mt-1 line-clamp-2">
                         {comment.text}
                       </p>
                       <p className="text-xs text-primary mt-2 truncate">
@@ -203,84 +194,63 @@ const DashboardTab = () => {
 
         {/* Latest Users */}
         <div>
-          <h3 className="text-xl mb-4 text-primary">Latest Users</h3>
+          <h3 className="text-xl mb-4 text-primary tracking-wide">
+            Latest Users
+          </h3>
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
             {latestUsers.length > 0 ? (
-              latestUsers.map((user) => {
-                console.log(
-                  "Dashboard - Rendering user:",
-                  user.name,
-                  "with profile:",
-                  user.profilePicture,
-                );
-                return (
-                  <div
-                    key={user._id}
-                    className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/10"
-                  >
-                    <div className="flex items-center space-x-3">
+              latestUsers.map((user) => (
+                <div
+                  key={user._id}
+                  className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/10"
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* User Avatar */}
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                       {user.profilePicture ? (
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                          <img
-                            src={getProfileImageUrl(user.profilePicture)}
-                            alt={user.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.log(
-                                "User image failed to load for:",
-                                user.name,
-                                "URL:",
-                                e.target.src,
-                              );
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                              e.target.parentElement.innerHTML = `
-                                <div class="w-full h-full bg-primary/20 flex items-center justify-center">
-                                  <span class="text-primary text-lg font-semibold">
-                                    ${user.name?.charAt(0).toUpperCase() || "U"}
-                                  </span>
-                                </div>
-                              `;
-                            }}
-                          />
-                        </div>
+                        <img
+                          src={getProfileImageUrl(user.profilePicture)}
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => handleImageError(e, user.name)}
+                        />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
-                          <span className="text-primary text-lg font-semibold">
+                        <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-primary text-lg">
                             {user.name?.charAt(0).toUpperCase() || "U"}
                           </span>
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <h4 className="font-semibold text-white truncate">
-                            {user.name}
-                          </h4>
-                          <span className="text-xs text-secondary/60 whitespace-nowrap">
-                            {formatDistanceToNow(new Date(user.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-secondary text-sm truncate">
-                          {user.email}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span
-                            className={`inline-block px-2 py-0.5 text-xs rounded-full ${
-                              user.role === "admin"
-                                ? "bg-primary/20 text-primary"
-                                : "bg-secondary/20 text-secondary"
-                            }`}
-                          >
-                            {user.role}
-                          </span>
-                        </div>
+                    </div>
+
+                    {/* User Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h4 className="text-white truncate">{user.name}</h4>
+                        <span className="text-xs text-secondary/60 whitespace-nowrap">
+                          {formatDistanceToNow(new Date(user.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-secondary text-sm truncate">
+                        {user.email}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs rounded-full ${
+                            user.role === "admin"
+                              ? "bg-primary/20 text-primary"
+                              : "bg-secondary/20 text-secondary"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
                       </div>
                     </div>
                   </div>
-                );
-              })
+                </div>
+              ))
             ) : (
               <div className="text-center py-8 bg-[#2a2a2a] rounded-lg border border-primary/10">
                 <UsersIcon className="w-12 h-12 text-primary/30 mx-auto mb-2" />
