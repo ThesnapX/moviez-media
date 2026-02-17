@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState("login"); // 'login' or 'register' or 'forgot'
+  const [authMode, setAuthMode] = useState("login");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -75,6 +75,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add this function to update user in context
+  const updateUser = (updatedUserData) => {
+    const updatedUser = { ...user, ...updatedUserData };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   const forgotPassword = async (email) => {
     try {
       await axios.post(
@@ -106,6 +113,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser, // Add this to the context value
     forgotPassword,
     showAuthModal,
     setShowAuthModal,

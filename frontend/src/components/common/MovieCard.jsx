@@ -15,22 +15,51 @@ const MovieCard = ({ movie }) => {
 
   const cardRef = useRef(null);
   const popupRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
   const popupWidth = 320; // w-80 = 20rem = 320px
   const popupHeight = 400; // Approximate height
   const isHoveringRef = useRef(false);
+  const isHoveringPopupRef = useRef(false);
 
   const navigate = useNavigate();
 
-  // Handle mouse enter - INSTANT (no delay)
+  // Handle mouse enter on card
   const handleMouseEnter = () => {
     isHoveringRef.current = true;
+    // Clear any pending hide timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
     calculatePosition();
   };
 
-  // Handle mouse leave
+  // Handle mouse leave on card
   const handleMouseLeave = () => {
     isHoveringRef.current = false;
-    setPopupPosition((prev) => ({ ...prev, show: false }));
+    // Add small delay before hiding to allow moving to popup
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (!isHoveringPopupRef.current) {
+        setPopupPosition((prev) => ({ ...prev, show: false }));
+      }
+    }, 100);
+  };
+
+  // Handle mouse enter on popup
+  const handlePopupMouseEnter = () => {
+    isHoveringPopupRef.current = true;
+    // Clear any pending hide timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  };
+
+  // Handle mouse leave on popup
+  const handlePopupMouseLeave = () => {
+    isHoveringPopupRef.current = false;
+    // Only hide if not hovering over card either
+    if (!isHoveringRef.current) {
+      setPopupPosition((prev) => ({ ...prev, show: false }));
+    }
   };
 
   // Calculate popup position based on viewport
@@ -72,8 +101,8 @@ const MovieCard = ({ movie }) => {
   useEffect(() => {
     const handleScroll = () => {
       if (popupPosition.show) {
-        // Check if mouse is still over the card
-        if (!isHoveringRef.current) {
+        // Check if mouse is still over the card or popup
+        if (!isHoveringRef.current && !isHoveringPopupRef.current) {
           setPopupPosition((prev) => ({ ...prev, show: false }));
         } else {
           // Reposition if still hovering
@@ -89,7 +118,10 @@ const MovieCard = ({ movie }) => {
   // Handle resize
   useEffect(() => {
     const handleResize = () => {
-      if (popupPosition.show && isHoveringRef.current) {
+      if (
+        popupPosition.show &&
+        (isHoveringRef.current || isHoveringPopupRef.current)
+      ) {
         calculatePosition();
       }
     };
@@ -109,11 +141,21 @@ const MovieCard = ({ movie }) => {
       ) {
         setPopupPosition((prev) => ({ ...prev, show: false }));
         isHoveringRef.current = false;
+        isHoveringPopupRef.current = false;
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Get transform origin based on side
@@ -169,7 +211,7 @@ const MovieCard = ({ movie }) => {
       {popupPosition.show && (
         <div
           ref={popupRef}
-          className="fixed z-50 pointer-events-none"
+          className="fixed z-50"
           style={{
             left:
               popupPosition.side === "right"
@@ -180,10 +222,12 @@ const MovieCard = ({ movie }) => {
             top: popupPosition.top,
             width: popupWidth,
           }}
+          onMouseEnter={handlePopupMouseEnter}
+          onMouseLeave={handlePopupMouseLeave}
         >
           {/* Popup card */}
           <div
-            className="pointer-events-auto transform transition-all duration-200 ease-out"
+            className="transform transition-all duration-200 ease-out"
             style={{
               transform: "scale(1) translateY(0)",
               opacity: 1,

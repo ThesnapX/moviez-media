@@ -9,17 +9,20 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-  }),
-);
+// IMPORTANT: CORS must be configured BEFORE any routes
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
+// Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files for uploads
+// Serve static files for uploads - this should be BEFORE routes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection with error handling
@@ -42,10 +45,10 @@ const connectDB = async () => {
         email: "admin@moviezmedia.com",
         password: hashedPassword,
         role: "admin",
-        profilePicture: "/uploads/defaults/admin-avatar.png",
+        profilePicture: "/uploads/avatars/avatar-1.png", // Changed to use avatar-1
       });
       console.log(
-        "✅ Default admin created - Email: admin@moviezmedia.com, Password: admin@123",
+        "✅ Default admin created - Email: admin@moviezmedia.com, Password: admin123",
       );
     }
   } catch (error) {
@@ -56,15 +59,27 @@ const connectDB = async () => {
 
 connectDB();
 
-// Import routes (will create these next)
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/users", require("./routes/userRoutes"));
-app.use("/api/movies", require("./routes/movieRoutes"));
-app.use("/api/genres", require("./routes/genreRoutes"));
-app.use("/api/requests", require("./routes/requestRoutes"));
-app.use("/api/comments", require("./routes/commentRoutes"));
-app.use("/api/newsletter", require("./routes/newsletterRoutes"));
-app.use("/api/admin", require("./routes/adminRoutes"));
+// Import routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const movieRoutes = require("./routes/movieRoutes");
+const genreRoutes = require("./routes/genreRoutes");
+const requestRoutes = require("./routes/requestRoutes");
+const commentRoutes = require("./routes/commentRoutes");
+const newsletterRoutes = require("./routes/newsletterRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const avatarRoutes = require("./routes/avatarRoutes");
+
+// Use routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/movies", movieRoutes);
+app.use("/api/genres", genreRoutes);
+app.use("/api/requests", requestRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api", avatarRoutes); // This should work now
 
 // Test route
 app.get("/api/test", (req, res) => {
