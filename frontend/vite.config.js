@@ -23,7 +23,7 @@ export default defineConfig({
       ],
       generateRobotsTxt: true,
       outDir: "dist",
-      // Add these options to ensure clean output
+      // Disable caching for sitemap
       dynamicRoutes: [
         "/",
         "/movies",
@@ -36,7 +36,7 @@ export default defineConfig({
         "/request-movie",
         "/download-app",
       ],
-      readable: true, // Makes the XML human-readable
+      readable: true,
     }),
   ],
   build: {
