@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { PencilIcon, TrashIcon, UserIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const UsersTab = () => {
   const [users, setUsers] = useState([]);
@@ -17,7 +17,6 @@ const UsersTab = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${backendUrl}/api/admin/users`);
-      console.log("Fetched users:", response.data); // Debug log
       setUsers(response.data);
     } catch (error) {
       toast.error("Failed to fetch users");
@@ -51,28 +50,6 @@ const UsersTab = () => {
     } catch (error) {
       toast.error("Failed to update user");
     }
-  };
-
-  // Helper function to get full image URL
-  const getProfileImageUrl = (profilePath) => {
-    if (!profilePath) return null;
-
-    // Log the profile path for debugging
-    console.log("Profile path:", profilePath);
-
-    // If it's already a full URL, return as is
-    if (profilePath.startsWith("http")) return profilePath;
-
-    // Make sure the path starts with a slash
-    const normalizedPath = profilePath.startsWith("/")
-      ? profilePath
-      : `/${profilePath}`;
-
-    // Construct the full URL
-    const fullUrl = `${backendUrl}${normalizedPath}`;
-    console.log("Full image URL:", fullUrl);
-
-    return fullUrl;
   };
 
   if (loading) {
@@ -163,95 +140,56 @@ const UsersTab = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => {
-              console.log(
-                "Rendering user:",
-                user.name,
-                "with profile:",
-                user.profilePicture,
-              ); // Debug log
-
-              return (
-                <tr
-                  key={user._id}
-                  className="border-b border-primary/10 hover:bg-primary/5"
-                >
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-3">
-                      {user.profilePicture ? (
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
-                          <img
-                            src={getProfileImageUrl(user.profilePicture)}
-                            alt={user.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.log(
-                                "Image failed to load for user:",
-                                user.name,
-                                "URL:",
-                                e.target.src,
-                              );
-                              // Fallback if image fails to load
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                              e.target.parentElement.innerHTML = `
-                                <div class="w-full h-full bg-primary/20 flex items-center justify-center">
-                                  <span class="text-primary text-lg font-semibold">
-                                    ${user.name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              `;
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
-                          <span className="text-primary text-lg font-semibold">
-                            {user.name?.charAt(0).toUpperCase() || "U"}
-                          </span>
-                        </div>
-                      )}
-                      <span className="text-white font-medium">
-                        {user.name}
+            {users.map((user) => (
+              <tr
+                key={user._id}
+                className="border-b border-primary/10 hover:bg-primary/5"
+              >
+                <td className="py-3 px-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                      <span className="text-primary text-sm font-semibold">
+                        {user.name?.charAt(0).toUpperCase() || "U"}
                       </span>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-secondary">{user.email}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.role === "admin"
-                          ? "bg-primary/20 text-primary"
-                          : "bg-secondary/20 text-secondary"
-                      }`}
+                    <span className="text-white">{user.name}</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-secondary">{user.email}</td>
+                <td className="py-3 px-4">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      user.role === "admin"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-secondary/20 text-secondary"
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-secondary">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setEditingUser(user)}
+                      className="p-1 text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
+                      title="Edit user"
                     >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-secondary">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => setEditingUser(user)}
-                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
-                        title="Edit user"
-                      >
-                        <PencilIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user._id)}
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Delete user"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                      <PencilIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user._id)}
+                      className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                      title="Delete user"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -259,7 +197,6 @@ const UsersTab = () => {
       {/* Empty State */}
       {users.length === 0 && !loading && (
         <div className="text-center py-12 bg-[#2a2a2a] rounded-lg border border-primary/20">
-          <UserIcon className="w-16 h-16 text-primary/30 mx-auto mb-3" />
           <p className="text-secondary">No users found</p>
         </div>
       )}

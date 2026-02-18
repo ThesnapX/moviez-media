@@ -35,7 +35,6 @@ const MobileNav = () => {
   };
 
   const handleSearchClick = () => {
-    // Navigate to search page instead of opening modal
     navigate("/search");
   };
 
@@ -82,7 +81,7 @@ const MobileNav = () => {
           )}
         </button>
 
-        {/* Search Button - Now navigates to search page */}
+        {/* Search Button */}
         <button
           onClick={handleSearchClick}
           className="flex flex-col items-center group relative"

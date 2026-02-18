@@ -16,12 +16,11 @@ router.get("/profile", protect, async (req, res) => {
 // Update user profile
 router.put("/profile", protect, async (req, res) => {
   try {
-    const { name, email, profilePicture, password } = req.body;
+    const { name, email, password } = req.body;
     const user = await User.findById(req.user._id);
 
     if (name) user.name = name;
     if (email) user.email = email;
-    if (profilePicture) user.profilePicture = profilePicture;
 
     // If password is provided, hash it
     if (password) {
@@ -38,7 +37,6 @@ router.put("/profile", protect, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
@@ -52,7 +50,7 @@ router.get("/watchlist", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate({
       path: "watchlist",
-      populate: { path: "genres" }, // Populate genres if needed
+      populate: { path: "genres" },
     });
 
     res.json(user.watchlist);
@@ -67,7 +65,6 @@ router.post("/watchlist/:movieId", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    // Check if already in watchlist
     if (!user.watchlist.includes(req.params.movieId)) {
       user.watchlist.push(req.params.movieId);
       await user.save();

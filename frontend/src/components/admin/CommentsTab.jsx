@@ -42,26 +42,6 @@ const CommentsTab = () => {
     }
   };
 
-  const getProfileImageUrl = (profilePath) => {
-    if (!profilePath) return null;
-    if (profilePath.startsWith("http")) return profilePath;
-    const normalizedPath = profilePath.startsWith("/")
-      ? profilePath
-      : `/${profilePath}`;
-    return `${backendUrl}${normalizedPath}`;
-  };
-
-  const handleImageError = (e, userName) => {
-    e.target.onerror = null;
-    e.target.style.display = "none";
-    const parent = e.target.parentElement;
-    const fallback = document.createElement("div");
-    fallback.className =
-      "w-full h-full bg-primary/20 flex items-center justify-center";
-    fallback.innerHTML = `<span class="text-primary text-sm">${userName?.charAt(0).toUpperCase() || "U"}</span>`;
-    parent.appendChild(fallback);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -86,22 +66,11 @@ const CommentsTab = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4 flex-1">
-                  {/* User Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                    {comment.user?.profilePicture ? (
-                      <img
-                        src={getProfileImageUrl(comment.user.profilePicture)}
-                        alt={comment.user.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => handleImageError(e, comment.user.name)}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                        <span className="text-primary text-sm">
-                          {comment.user?.name?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )}
+                  {/* User Avatar - First Letter */}
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
+                    <span className="text-primary text-sm font-semibold">
+                      {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                    </span>
                   </div>
 
                   {/* Comment Content */}

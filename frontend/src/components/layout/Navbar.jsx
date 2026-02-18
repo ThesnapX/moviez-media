@@ -8,7 +8,7 @@ import { useState } from "react";
 
 const Navbar = () => {
   const { user, logout, setShowAuthModal } = useAuth();
-  const { setShowSearchModal } = useSearch(); // Add this line
+  const { setShowSearchModal } = useSearch();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
@@ -19,13 +19,12 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="group">
-              <h1 className="text-3xl font-['Bebas_Neue'] tracking-[0.02em]">
+              <h1 className="text-3xl font-['Bebas_Neue'] tracking-[-0.02em]">
                 <span className="text-primary relative font-normal">
                   Moviez
                   <span className="absolute inset-0 blur-md bg-primary/20 opacity-0 group-hover:opacity-60 transition-opacity duration-500"></span>
                 </span>
                 <span className="text-white relative font-normal">
-                  {" "}
                   Media
                   <span className="absolute inset-0 blur-md bg-white/10 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></span>
                 </span>
@@ -84,19 +83,13 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-2 focus:outline-none"
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary">
-                      <img
-                        src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePicture}`}
-                        alt={user.name}
-                        className="w-full h-full object-cover"
-                        key={user.profilePicture}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/avatar-1.png`;
-                        }}
-                      />
+                    {/* First Letter Avatar */}
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary">
+                      <span className="text-primary text-sm font-semibold">
+                        {user.name?.charAt(0).toUpperCase()}
+                      </span>
                     </div>
                   </button>
 

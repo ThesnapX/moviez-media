@@ -7,7 +7,6 @@ import {
   TagIcon,
   UsersIcon,
   ChatBubbleLeftIcon,
-  UserIcon,
 } from "@heroicons/react/24/outline";
 import { formatDistanceToNow } from "date-fns";
 
@@ -32,7 +31,6 @@ const DashboardTab = () => {
   const fetchDashboardData = async () => {
     try {
       const response = await axios.get(`${backendUrl}/api/admin/dashboard`);
-      console.log("Dashboard data:", response.data);
       setStats(response.data.stats);
       setLatestComments(response.data.latestComments);
       setLatestUsers(response.data.latestUsers);
@@ -41,26 +39,6 @@ const DashboardTab = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getProfileImageUrl = (profilePath) => {
-    if (!profilePath) return null;
-    if (profilePath.startsWith("http")) return profilePath;
-    const normalizedPath = profilePath.startsWith("/")
-      ? profilePath
-      : `/${profilePath}`;
-    return `${backendUrl}${normalizedPath}`;
-  };
-
-  const handleImageError = (e, userName) => {
-    e.target.onerror = null;
-    e.target.style.display = "none";
-    const parent = e.target.parentElement;
-    const fallback = document.createElement("div");
-    fallback.className =
-      "w-full h-full bg-primary/20 flex items-center justify-center";
-    fallback.innerHTML = `<span class="text-primary text-sm">${userName?.charAt(0).toUpperCase() || "U"}</span>`;
-    parent.appendChild(fallback);
   };
 
   const statCards = [
@@ -141,24 +119,11 @@ const DashboardTab = () => {
                   className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/10"
                 >
                   <div className="flex items-start space-x-3">
-                    {/* User Avatar */}
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                      {comment.user?.profilePicture ? (
-                        <img
-                          src={getProfileImageUrl(comment.user.profilePicture)}
-                          alt={comment.user.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) =>
-                            handleImageError(e, comment.user.name)
-                          }
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-primary text-sm">
-                            {comment.user?.name?.charAt(0).toUpperCase() || "U"}
-                          </span>
-                        </div>
-                      )}
+                    {/* User Avatar - First Letter */}
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
+                      <span className="text-primary text-sm font-semibold">
+                        {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                      </span>
                     </div>
 
                     {/* Comment Content */}
@@ -205,22 +170,11 @@ const DashboardTab = () => {
                   className="bg-[#2a2a2a] rounded-lg p-4 border border-primary/10"
                 >
                   <div className="flex items-center space-x-3">
-                    {/* User Avatar */}
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                      {user.profilePicture ? (
-                        <img
-                          src={getProfileImageUrl(user.profilePicture)}
-                          alt={user.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => handleImageError(e, user.name)}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-primary text-lg">
-                            {user.name?.charAt(0).toUpperCase() || "U"}
-                          </span>
-                        </div>
-                      )}
+                    {/* User Avatar - First Letter */}
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
+                      <span className="text-primary text-lg font-semibold">
+                        {user.name?.charAt(0).toUpperCase() || "U"}
+                      </span>
                     </div>
 
                     {/* User Info */}

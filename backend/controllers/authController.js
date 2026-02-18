@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, profilePicture } = req.body; // Make sure profilePicture is destructured
+    const { name, email, password } = req.body;
 
     // Check if user exists
     let user = await User.findOne({ email });
@@ -24,12 +24,11 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user with profile picture
+    // Create user
     user = new User({
       name,
       email,
       password: hashedPassword,
-      profilePicture: profilePicture || "/uploads/avatars/avatar-1.png", // Use selected or default
     });
 
     await user.save();
@@ -48,7 +47,6 @@ exports.register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
@@ -93,7 +91,6 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {

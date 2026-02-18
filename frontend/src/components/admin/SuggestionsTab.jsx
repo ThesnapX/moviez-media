@@ -148,26 +148,6 @@ const SuggestionsTab = () => {
     }
   };
 
-  const getProfileImageUrl = (profilePath) => {
-    if (!profilePath) return null;
-    if (profilePath.startsWith("http")) return profilePath;
-    const normalizedPath = profilePath.startsWith("/")
-      ? profilePath
-      : `/${profilePath}`;
-    return `${backendUrl}${normalizedPath}`;
-  };
-
-  const handleImageError = (e, userName) => {
-    e.target.onerror = null;
-    e.target.style.display = "none";
-    const parent = e.target.parentElement;
-    const fallback = document.createElement("div");
-    fallback.className =
-      "w-full h-full bg-primary/20 flex items-center justify-center";
-    fallback.innerHTML = `<span class="text-primary text-sm">${userName?.charAt(0).toUpperCase() || "U"}</span>`;
-    parent.appendChild(fallback);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -182,7 +162,7 @@ const SuggestionsTab = () => {
         User Suggestions & Requests
       </h2>
 
-      {/* Requests List - Fixed overflow */}
+      {/* Requests List */}
       <div className="space-y-3 sm:space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
         {requests.length > 0 ? (
           requests.map((request) => (
@@ -193,22 +173,11 @@ const SuggestionsTab = () => {
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div className="flex items-start space-x-3 flex-1 min-w-0">
-                  {/* User Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                    {request.user?.profilePicture ? (
-                      <img
-                        src={getProfileImageUrl(request.user.profilePicture)}
-                        alt={request.user.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => handleImageError(e, request.user.name)}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                        <span className="text-primary text-sm">
-                          {request.user?.name?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )}
+                  {/* User Avatar - First Letter */}
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0">
+                    <span className="text-primary text-sm font-semibold">
+                      {request.user?.name?.charAt(0).toUpperCase() || "U"}
+                    </span>
                   </div>
 
                   {/* Request Info */}
@@ -307,7 +276,7 @@ const SuggestionsTab = () => {
         )}
       </div>
 
-      {/* Request Details Modal - Make it responsive */}
+      {/* Request Details Modal */}
       {showModal && selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 blur-backdrop">
           <div className="bg-[#1a1a1a] rounded-xl w-full max-w-2xl border border-primary/20 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -338,20 +307,10 @@ const SuggestionsTab = () => {
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* User Info */}
               <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 bg-[#2a2a2a] rounded-lg border border-primary/10">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0 mx-auto sm:mx-0">
-                  {selectedRequest.user?.profilePicture ? (
-                    <img
-                      src={getProfileImageUrl(
-                        selectedRequest.user.profilePicture,
-                      )}
-                      alt={selectedRequest.user.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                      <UserIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-                    </div>
-                  )}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30 flex-shrink-0 mx-auto sm:mx-0">
+                  <span className="text-primary text-xl sm:text-2xl font-semibold">
+                    {selectedRequest.user?.name?.charAt(0).toUpperCase() || "U"}
+                  </span>
                 </div>
                 <div className="text-center sm:text-left">
                   <h4 className="text-lg sm:text-xl text-white">

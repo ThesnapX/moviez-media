@@ -42,9 +42,10 @@ const SearchModal = () => {
   }, [searchQuery]);
 
   // Perform search when debounced query changes
+  // Perform search when debounced query changes
   useEffect(() => {
     if (debouncedQuery && debouncedQuery.length >= 2) {
-      performSearch(debouncedQuery);
+      performSearch(debouncedQuery, "modal"); // Add 'modal' source
     }
   }, [debouncedQuery, performSearch]);
 

@@ -75,7 +75,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Add this function to update user in context
   const updateUser = (updatedUserData) => {
     const updatedUser = { ...user, ...updatedUserData };
     setUser(updatedUser);
@@ -113,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    updateUser, // Add this to the context value
+    updateUser,
     forgotPassword,
     showAuthModal,
     setShowAuthModal,

@@ -11,8 +11,8 @@ import {
   FilmIcon,
   TvIcon,
   RocketLaunchIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
-import AvatarSelector from "../components/common/AvatarSelector";
 import MovieCard from "../components/common/MovieCard";
 
 const Profile = () => {
@@ -20,12 +20,6 @@ const Profile = () => {
   const { watchlist, watchlistLoading, refreshWatchlist } = useMovies();
   const [activeTab, setActiveTab] = useState("profile");
   const [editing, setEditing] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(
-    user?.profilePicture || "/uploads/avatars/avatar-1.png",
-  );
-  const [tempSelectedAvatar, setTempSelectedAvatar] = useState(
-    user?.profilePicture || "/uploads/avatars/avatar-1.png",
-  );
   const [loading, setLoading] = useState(false);
 
   const {
@@ -49,14 +43,10 @@ const Profile = () => {
     if (user) {
       setValue("name", user.name);
       setValue("email", user.email);
-      setSelectedAvatar(user.profilePicture || "/uploads/avatars/avatar-1.png");
-      setTempSelectedAvatar(
-        user.profilePicture || "/uploads/avatars/avatar-1.png",
-      );
     }
   }, [user, setValue]);
 
-  // Refresh watchlist when tab changes to watchlist
+  // Refresh watchlist when tab changes
   useEffect(() => {
     if (activeTab === "watchlist") {
       refreshWatchlist();
@@ -69,7 +59,6 @@ const Profile = () => {
       const updateData = {
         name: data.name,
         email: data.email,
-        profilePicture: tempSelectedAvatar,
       };
 
       if (data.newPassword) {
@@ -84,10 +73,8 @@ const Profile = () => {
       updateUser({
         name: data.name,
         email: data.email,
-        profilePicture: tempSelectedAvatar,
       });
 
-      setSelectedAvatar(tempSelectedAvatar);
       toast.success("Profile updated successfully");
       setEditing(false);
     } catch (error) {
@@ -122,20 +109,13 @@ const Profile = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        {/* Profile Header */}
+        {/* Profile Header - First letter avatar */}
         <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6 border border-primary/20">
           <div className="flex items-center space-x-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary">
-              <img
-                src={`${import.meta.env.VITE_BACKEND_URL}${selectedAvatar}`}
-                alt={user.name}
-                className="w-full h-full object-cover"
-                key={selectedAvatar}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = `${import.meta.env.VITE_BACKEND_URL}/uploads/avatars/avatar-1.png`;
-                }}
-              />
+            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary">
+              <span className="text-primary text-3xl font-semibold">
+                {user.name?.charAt(0).toUpperCase()}
+              </span>
             </div>
             <div>
               <h1 className="text-3xl text-primary">{user.name}</h1>
@@ -281,15 +261,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Avatar Selector */}
-                <div className="pt-4">
-                  <AvatarSelector
-                    selectedAvatar={selectedAvatar}
-                    tempSelectedAvatar={tempSelectedAvatar}
-                    onTempSelect={setTempSelectedAvatar}
-                  />
-                </div>
-
                 {/* Form Actions */}
                 <div className="flex space-x-4 pt-4">
                   <button
@@ -307,7 +278,6 @@ const Profile = () => {
                       setValue("email", user.email);
                       setValue("newPassword", "");
                       setValue("confirmPassword", "");
-                      setTempSelectedAvatar(selectedAvatar);
                     }}
                     className="flex-1 bg-[#2a2a2a] text-secondary py-3 rounded-lg font-semibold hover:bg-[#3a3a3a] transition-colors"
                   >
@@ -394,32 +364,33 @@ const Profile = () => {
             Logout
           </button>
         </div>
-      </div>
-      {/* Mobile Footer */}
-      <div className="md:hidden mt-12 pt-6 border-t border-primary/20">
-        <div className="text-center space-y-2">
-          <p className="text-xs text-secondary/40">
-            © 2024 MoviezMedia. All rights reserved.
-          </p>
-          <div className="flex justify-center space-x-4 text-xs">
-            <Link
-              to="/privacy"
-              className="text-secondary/40 hover:text-primary transition-colors"
-            >
-              Privacy
-            </Link>
-            <Link
-              to="/terms"
-              className="text-secondary/40 hover:text-primary transition-colors"
-            >
-              Terms
-            </Link>
-            <Link
-              to="/contact"
-              className="text-secondary/40 hover:text-primary transition-colors"
-            >
-              Contact
-            </Link>
+
+        {/* Mobile Footer */}
+        <div className="md:hidden mt-12 pt-6 border-t border-primary/20">
+          <div className="text-center space-y-2">
+            <p className="text-xs text-secondary/40">
+              © 2024 MoviezMedia. All rights reserved.
+            </p>
+            <div className="flex justify-center space-x-4 text-xs">
+              <Link
+                to="/privacy"
+                className="text-secondary/40 hover:text-primary transition-colors"
+              >
+                Privacy
+              </Link>
+              <Link
+                to="/terms"
+                className="text-secondary/40 hover:text-primary transition-colors"
+              >
+                Terms
+              </Link>
+              <Link
+                to="/contact"
+                className="text-secondary/40 hover:text-primary transition-colors"
+              >
+                Contact
+              </Link>
+            </div>
           </div>
         </div>
       </div>

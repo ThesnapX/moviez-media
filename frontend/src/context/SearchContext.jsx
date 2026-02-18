@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useRef } from "react";
 import axios from "axios";
 
 const SearchContext = createContext();
@@ -14,52 +14,61 @@ export const SearchProvider = ({ children }) => {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  // Perform search - NO AUTHENTICATION REQUIRED
+  const abortControllerRef = useRef(null);
+  const lastQueryRef = useRef("");
+
   const performSearch = async (query) => {
     if (!query || query.length < 2) {
       setSearchResults([]);
       return;
     }
 
+    // Prevent duplicate calls
+    if (query === lastQueryRef.current) return;
+    lastQueryRef.current = query;
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsSearching(true);
+
     try {
-      // This endpoint should be public (no auth required)
       const response = await axios.get(
         `${backendUrl}/api/movies/search/${encodeURIComponent(query)}`,
+        { signal: controller.signal },
       );
+
       setSearchResults(response.data);
 
-      // Add to recent searches (local only, no auth needed)
-      if (query.length >= 2) {
-        setRecentSearches((prev) => {
-          const newSearches = [query, ...prev.filter((s) => s !== query)].slice(
-            0,
-            5,
-          );
-          return newSearches;
-        });
-      }
+      setRecentSearches((prev) => {
+        const updated = [query, ...prev.filter((s) => s !== query)].slice(0, 5);
+        return updated;
+      });
     } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
+      if (error.name !== "CanceledError") {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      }
     } finally {
       setIsSearching(false);
     }
   };
 
-  // Clear search
   const clearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
     setShowSearchModal(false);
   };
 
-  // Remove from recent searches
   const removeRecentSearch = (queryToRemove) => {
     setRecentSearches((prev) => prev.filter((q) => q !== queryToRemove));
   };
 
-  // Clear all recent searches
   const clearRecentSearches = () => {
     setRecentSearches([]);
   };
