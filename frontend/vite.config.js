@@ -19,19 +19,33 @@ export default defineConfig({
         "/profile",
         "/watchlist",
         "/request-movie",
+        "/download-app",
       ],
-      outDir: "dist", // Make sure it outputs to the correct build directory
-      generateRobotsTxt: true, // This will also create robots.txt
-      robots: [
-        {
-          userAgent: "*",
-          allow: "/",
-        },
+      generateRobotsTxt: true,
+      outDir: "dist",
+      // Add these options to ensure clean output
+      dynamicRoutes: [
+        "/",
+        "/movies",
+        "/tv-series",
+        "/anime",
+        "/popular",
+        "/search",
+        "/profile",
+        "/watchlist",
+        "/request-movie",
+        "/download-app",
       ],
+      readable: true, // Makes the XML human-readable
     }),
   ],
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: "index.html",
+      },
+    },
   },
 });
