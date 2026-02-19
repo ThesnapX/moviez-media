@@ -63,13 +63,26 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Movie not found" });
     }
 
-    // Increment views
-    movie.views += 1;
-    await movie.save();
+    // Ensure all fields exist to prevent frontend errors
+    const safeMovie = {
+      ...movie.toObject(),
+      language: movie.language || "",
+      duration: movie.duration || "",
+      ageRating: movie.ageRating || "PG-13",
+      quality: movie.quality || "HD",
+      imdbRating: movie.imdbRating || null,
+      downloadUrls: movie.downloadUrls || [],
+      spotlight: movie.spotlight || false,
+      views: movie.views || 0,
+    };
 
-    res.json(movie);
+    // Increment views
+    await Movie.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+
+    res.json(safeMovie);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Error fetching movie:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

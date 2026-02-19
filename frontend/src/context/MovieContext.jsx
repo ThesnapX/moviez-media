@@ -93,8 +93,13 @@ export const MovieProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       console.error("Error fetching movie:", error);
-      toast.error("Failed to load movie details");
-      return null;
+      if (error.response?.status === 404) {
+        throw new Error("Movie not found");
+      } else if (error.response?.status === 500) {
+        throw new Error("Server error. Please try again later.");
+      } else {
+        throw new Error("Failed to load movie details");
+      }
     }
   };
 
