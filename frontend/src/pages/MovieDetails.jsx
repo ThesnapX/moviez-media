@@ -34,7 +34,6 @@ const MovieDetails = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [popular, setPopular] = useState([]);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchMovieDetails();
@@ -51,26 +50,9 @@ const MovieDetails = () => {
   const fetchMovieDetails = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getMovieById(id);
-
-      // Ensure all fields exist with defaults to prevent rendering errors
-      const safeMovie = {
-        ...data,
-        language: data?.language || "",
-        duration: data?.duration || "",
-        ageRating: data?.ageRating || "PG-13",
-        quality: data?.quality || "HD",
-        imdbRating: data?.imdbRating || null,
-        downloadUrls: data?.downloadUrls || [],
-        posterVertical: data?.posterVertical || { url: "" },
-        posterHorizontal: data?.posterHorizontal || { url: "" },
-      };
-
-      setMovie(safeMovie);
+      setMovie(data);
     } catch (error) {
-      console.error("Error fetching movie:", error);
-      setError(error.message || "Failed to load movie details");
       toast.error("Failed to load movie details");
     } finally {
       setLoading(false);
@@ -146,13 +128,12 @@ const MovieDetails = () => {
     );
   }
 
-  if (error || !movie) {
+  if (!movie) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-4xl mb-4 text-primary">Movie Not Found</h1>
-        <p className="text-secondary mb-6">
-          {error ||
-            "The movie you're looking for doesn't exist or couldn't be loaded."}
+        <p className="text-secondary">
+          The movie you're looking for doesn't exist.
         </p>
         <Link
           to="/"
@@ -166,26 +147,22 @@ const MovieDetails = () => {
 
   const isTvOrAnime = movie.type === "tv-series" || movie.type === "anime";
 
-  // Get the horizontal poster URL safely
-  const horizontalPosterUrl =
-    movie.posterHorizontal?.url ||
-    (typeof movie.posterHorizontal === "string" ? movie.posterHorizontal : "");
-
   return (
     <div className="min-h-screen bg-dark relative">
-      {/* Blurred Background Image - Only show if poster exists */}
-      {horizontalPosterUrl && (
+      {/* Blurred Background Image */}
+      {movie.posterHorizontal && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url(${horizontalPosterUrl})`,
+              backgroundImage: `url(${movie.posterHorizontal?.url || movie.posterHorizontal})`,
               filter: "blur(20px)",
               transform: "scale(1.1)",
               opacity: "0.15",
             }}
           />
-          <div className="absolute inset-0 bg-dark/50" />
+          <div className="absolute inset-0 bg-dark/50" />{" "}
+          {/* Extra dark overlay */}
         </div>
       )}
 
@@ -198,16 +175,10 @@ const MovieDetails = () => {
               <img
                 src={
                   movie.posterVertical?.url ||
-                  (typeof movie.posterVertical === "string"
-                    ? `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical}`
-                    : "")
+                  `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical}`
                 }
                 alt={movie.title}
                 className="w-full rounded-2xl shadow-2xl border border-primary/20"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/fallback-poster.png"; // Add a fallback image
-                }}
               />
             </div>
           </div>
@@ -244,7 +215,7 @@ const MovieDetails = () => {
 
             {/* Meta Info Row */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
-              <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+              <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-semibold">
                 {movie.type === "movie"
                   ? "Movie"
                   : movie.type === "tv-series"
@@ -259,23 +230,19 @@ const MovieDetails = () => {
                 </span>
               )}
 
-              {movie.ageRating && (
-                <span
-                  className={`px-3 py-1 rounded-full text-sm ${getAgeRatingColor(movie.ageRating)}`}
-                >
-                  {movie.ageRating}
-                </span>
-              )}
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${getAgeRatingColor(movie.ageRating)}`}
+              >
+                {movie.ageRating}
+              </span>
 
-              {movie.quality && (
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm">
-                  {movie.quality}
-                </span>
-              )}
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm font-semibold">
+                {movie.quality}
+              </span>
 
               {/* Language Display */}
               {movie.language && (
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm">
+                <span className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm font-semibold">
                   {movie.language}
                 </span>
               )}
@@ -295,10 +262,10 @@ const MovieDetails = () => {
               >
                 {movie.description}
               </p>
-              {movie.description && movie.description.length > 300 && (
+              {movie.description.length > 300 && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="flex items-center text-primary hover:text-primary/80 transition-colors mt-2 text-sm"
+                  className="flex items-center text-primary hover:text-primary/80 transition-colors mt-2 text-sm font-semibold"
                 >
                   {showFullDescription ? (
                     <>
@@ -441,7 +408,7 @@ const MovieDetails = () => {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm text-white truncate group-hover:text-primary transition-colors">
+                        <h3 className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
                           {item.title}
                         </h3>
                         <p className="text-xs text-secondary/60">
