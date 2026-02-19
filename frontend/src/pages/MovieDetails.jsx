@@ -197,7 +197,6 @@ const MovieDetails = () => {
             </h1>
 
             {/* Meta Info Row */}
-            {/* Meta Info Row */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-semibold">
                 {movie.type === "movie"
@@ -223,13 +222,6 @@ const MovieDetails = () => {
               <span className="px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm font-semibold">
                 {movie.quality}
               </span>
-
-              {/* Language Display */}
-              {movie.language && (
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm font-semibold">
-                  {movie.language}
-                </span>
-              )}
 
               {movie.imdbRating && (
                 <span className="flex items-center text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full text-sm">
