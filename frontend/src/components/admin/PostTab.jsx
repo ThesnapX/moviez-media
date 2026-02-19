@@ -25,6 +25,7 @@ const PostTab = () => {
     duration: "",
     ageRating: "PG-13",
     quality: "HD",
+    language: "", // New language field
     imdbRating: "",
     genres: [],
     downloadUrls: [
@@ -143,6 +144,7 @@ const PostTab = () => {
 
       // Debug: Check what's being saved
       console.log("Saving download URLs:", formData.downloadUrls);
+      console.log("Language:", formData.language);
 
       // Append form data as JSON string
       submitData.append("data", JSON.stringify(formData));
@@ -200,6 +202,7 @@ const PostTab = () => {
       duration: "",
       ageRating: "PG-13",
       quality: "HD",
+      language: "", // Reset language field
       imdbRating: "",
       genres: [],
       downloadUrls: [
@@ -221,6 +224,7 @@ const PostTab = () => {
     setHorizontalUploadPreview("");
     setEditingMovie(null);
   };
+
   const openEditModal = (movie) => {
     setEditingMovie(movie);
 
@@ -273,6 +277,7 @@ const PostTab = () => {
       duration: movie.duration || "",
       ageRating: movie.ageRating || "PG-13",
       quality: movie.quality || "HD",
+      language: movie.language || "", // Set language from movie data
       imdbRating: movie.imdbRating,
       genres: movie.genres.map((g) => g._id || g),
       downloadUrls,
@@ -426,6 +431,7 @@ const PostTab = () => {
                 </div>
 
                 {/* Date and Details */}
+                {/* Date and Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
@@ -511,6 +517,22 @@ const PostTab = () => {
                       </select>
                     </div>
                   </div>
+                </div>
+
+                {/* Language Field - Full width on its own row */}
+                <div className="w-full">
+                  <label className="block text-secondary mb-1 text-sm sm:text-base">
+                    Language
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.language}
+                    onChange={(e) =>
+                      setFormData({ ...formData, language: e.target.value })
+                    }
+                    placeholder="e.g., English, Hindi, Japanese, Spanish"
+                    className="w-full bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
+                  />
                 </div>
 
                 {/* IMDB Rating */}

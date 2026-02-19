@@ -148,9 +148,26 @@ const MovieDetails = () => {
   const isTvOrAnime = movie.type === "tv-series" || movie.type === "anime";
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen bg-dark relative">
+      {/* Blurred Background Image */}
+      {movie.posterHorizontal && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${movie.posterHorizontal?.url || movie.posterHorizontal})`,
+              filter: "blur(20px)",
+              transform: "scale(1.1)",
+              opacity: "0.15",
+            }}
+          />
+          <div className="absolute inset-0 bg-dark/50" />{" "}
+          {/* Extra dark overlay */}
+        </div>
+      )}
+
       {/* Main Hero Section */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Column - Poster */}
           <div className="md:w-1/3 lg:w-1/4">
@@ -222,6 +239,13 @@ const MovieDetails = () => {
               <span className="px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm font-semibold">
                 {movie.quality}
               </span>
+
+              {/* Language Display */}
+              {movie.language && (
+                <span className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm font-semibold">
+                  {movie.language}
+                </span>
+              )}
 
               {movie.imdbRating && (
                 <span className="flex items-center text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full text-sm">
@@ -341,7 +365,7 @@ const MovieDetails = () => {
 
       {/* Recommendations and Popular Section */}
       {(recommendations.length > 0 || popular.length > 0) && (
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Recommendations */}
             {recommendations.length > 0 && (
@@ -403,7 +427,9 @@ const MovieDetails = () => {
           </div>
         </div>
       )}
-      <div className="container mx-auto px-4 py-12">
+
+      {/* Comments Section */}
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <Comments movieId={id} />
       </div>
     </div>

@@ -75,6 +75,10 @@ const movieSchema = new mongoose.Schema({
     enum: ["HD", "FHD", "WebRIP", "BluRay", "DVD", "CAM", "TS", "HDTV"],
     default: "HD",
   },
+  language: {
+    type: String,
+    default: "",
+  },
   posterVertical: {
     public_id: {
       type: String,
