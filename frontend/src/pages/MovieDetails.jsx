@@ -294,7 +294,7 @@ const MovieDetails = () => {
                               <>
                                 <span className="text-white/20">|</span>
                                 <span className="text-xs text-secondary/60">
-                                  {download.size}
+                                  {download.size} {download.sizeUnit || "GB"}
                                 </span>
                               </>
                             )}

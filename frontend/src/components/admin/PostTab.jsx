@@ -141,6 +141,9 @@ const PostTab = () => {
         submitData.append("posterHorizontal", horizontalPoster);
       }
 
+      // Debug: Check what's being saved
+      console.log("Saving download URLs:", formData.downloadUrls);
+
       // Append form data as JSON string
       submitData.append("data", JSON.stringify(formData));
 
@@ -218,17 +221,41 @@ const PostTab = () => {
     setHorizontalUploadPreview("");
     setEditingMovie(null);
   };
-
   const openEditModal = (movie) => {
     setEditingMovie(movie);
 
-    // Format download URLs with size unit and episode field
-    const downloadUrls = movie.downloadUrls?.map((url) => ({
-      ...url,
-      episode: url.episode || "",
-      sizeUnit: url.size?.match(/[a-zA-Z]+$/)?.[0] || "GB",
-      size: url.size?.replace(/[a-zA-Z]+$/, "") || "",
-    })) || [
+    // Format download URLs with proper size and unit separation
+    const downloadUrls = movie.downloadUrls?.map((url) => {
+      // If the movie already has separate size and sizeUnit fields, use them
+      if (url.sizeUnit) {
+        return {
+          ...url,
+          episode: url.episode || "",
+          size: url.size || "",
+          sizeUnit: url.sizeUnit,
+        };
+      }
+
+      // For backward compatibility: parse size string if it contains unit
+      let sizeValue = url.size || "";
+      let sizeUnit = "GB"; // default
+
+      if (url.size) {
+        // Extract unit from size string if it exists
+        const unitMatch = url.size.match(/(MB|GB)$/i);
+        if (unitMatch) {
+          sizeUnit = unitMatch[0].toUpperCase();
+          sizeValue = url.size.replace(/(MB|GB)$/i, "").trim();
+        }
+      }
+
+      return {
+        ...url,
+        episode: url.episode || "",
+        size: sizeValue,
+        sizeUnit: sizeUnit,
+      };
+    }) || [
       {
         episode: "",
         quality: "1080p",
@@ -251,6 +278,7 @@ const PostTab = () => {
       downloadUrls,
       spotlight: movie.spotlight,
     });
+
     setVerticalPreview(
       `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical.url}`,
     );
@@ -277,7 +305,18 @@ const PostTab = () => {
 
   const updateDownloadUrl = (index, field, value) => {
     const newUrls = [...formData.downloadUrls];
-    newUrls[index][field] = value;
+    newUrls[index] = {
+      ...newUrls[index],
+      [field]: value,
+    };
+
+    // If updating size, make sure it's a clean number without units
+    if (field === "size") {
+      // Remove any units that might have been typed
+      const cleanSize = value.replace(/[^0-9.]/g, "");
+      newUrls[index].size = cleanSize;
+    }
+
     setFormData({ ...formData, downloadUrls: newUrls });
   };
 

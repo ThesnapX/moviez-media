@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const downloadUrlSchema = new mongoose.Schema({
+  episode: String,
   quality: {
     type: String,
     enum: [
@@ -18,6 +19,11 @@ const downloadUrlSchema = new mongoose.Schema({
     required: true,
   },
   size: String,
+  sizeUnit: {
+    type: String,
+    enum: ["MB", "GB"],
+    default: "GB",
+  },
   url: {
     type: String,
     required: true,
