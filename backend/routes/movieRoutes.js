@@ -135,47 +135,131 @@ router.put(
   ]),
   async (req, res) => {
     try {
+      console.log("Received update request for movie:", req.params.id);
+      console.log("Request body data:", req.body.data);
+
       const movieData = JSON.parse(req.body.data);
       const existingMovie = await Movie.findById(req.params.id);
 
+      if (!existingMovie) {
+        return res.status(404).json({ message: "Movie not found" });
+      }
+
+      // Clean the language field - ensure it's a single string
+      let languageValue = movieData.language || "";
+      if (typeof languageValue === "string") {
+        // If it's a comma-separated string, keep it as is (it's fine)
+        languageValue = languageValue.trim();
+      } else {
+        languageValue = "";
+      }
+
+      // Ensure all required fields have defaults
+      const updatedData = {
+        title: movieData.title || existingMovie.title,
+        description: movieData.description || existingMovie.description,
+        type: movieData.type || existingMovie.type,
+        releaseDate: movieData.releaseDate || existingMovie.releaseDate,
+        duration: movieData.duration || existingMovie.duration || "",
+        ageRating: movieData.ageRating || existingMovie.ageRating || "PG-13",
+        quality: movieData.quality || existingMovie.quality || "HD",
+        language: languageValue, // Use the cleaned language value
+        imdbRating: movieData.imdbRating
+          ? parseFloat(movieData.imdbRating)
+          : existingMovie.imdbRating,
+        genres: movieData.genres || existingMovie.genres || [],
+        downloadUrls:
+          movieData.downloadUrls || existingMovie.downloadUrls || [],
+        spotlight:
+          movieData.spotlight !== undefined
+            ? movieData.spotlight
+            : existingMovie.spotlight,
+      };
+
+      console.log("Updated data being saved:", updatedData);
+
       // Handle new vertical poster upload
-      if (req.files["posterVertical"]) {
-        // Delete old image from Cloudinary
+      if (
+        req.files &&
+        req.files["posterVertical"] &&
+        req.files["posterVertical"][0]
+      ) {
+        // Delete old image from Cloudinary if it exists
         if (existingMovie.posterVertical?.public_id) {
-          await cloudinary.uploader.destroy(
-            existingMovie.posterVertical.public_id,
-          );
+          try {
+            await cloudinary.uploader.destroy(
+              existingMovie.posterVertical.public_id,
+            );
+          } catch (cloudinaryError) {
+            console.error(
+              "Error deleting old vertical poster:",
+              cloudinaryError,
+            );
+          }
         }
 
-        movieData.posterVertical = {
+        updatedData.posterVertical = {
           public_id: req.files["posterVertical"][0].filename,
           url: req.files["posterVertical"][0].path,
         };
+      } else {
+        // Keep existing poster if no new upload
+        updatedData.posterVertical = existingMovie.posterVertical;
       }
 
       // Handle new horizontal poster upload
-      if (req.files["posterHorizontal"]) {
-        // Delete old image from Cloudinary
+      if (
+        req.files &&
+        req.files["posterHorizontal"] &&
+        req.files["posterHorizontal"][0]
+      ) {
+        // Delete old image from Cloudinary if it exists
         if (existingMovie.posterHorizontal?.public_id) {
-          await cloudinary.uploader.destroy(
-            existingMovie.posterHorizontal.public_id,
-          );
+          try {
+            await cloudinary.uploader.destroy(
+              existingMovie.posterHorizontal.public_id,
+            );
+          } catch (cloudinaryError) {
+            console.error(
+              "Error deleting old horizontal poster:",
+              cloudinaryError,
+            );
+          }
         }
 
-        movieData.posterHorizontal = {
+        updatedData.posterHorizontal = {
           public_id: req.files["posterHorizontal"][0].filename,
           url: req.files["posterHorizontal"][0].path,
         };
+      } else {
+        // Keep existing poster if no new upload
+        updatedData.posterHorizontal = existingMovie.posterHorizontal;
       }
 
-      const movie = await Movie.findByIdAndUpdate(req.params.id, movieData, {
-        new: true,
-      });
+      // Use findByIdAndUpdate with $set to avoid schema validation issues
+      const movie = await Movie.findByIdAndUpdate(
+        req.params.id,
+        { $set: updatedData },
+        { new: true, runValidators: true },
+      );
 
+      console.log("Movie updated successfully:", movie._id);
       res.json(movie);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server error" });
+      console.error("Error updating movie:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        name: error.name,
+      });
+
+      // Send a more detailed error response
+      res.status(500).json({
+        message: "Server error",
+        error: error.message,
+        details: error.stack,
+      });
     }
   },
 );

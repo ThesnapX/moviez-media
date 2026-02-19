@@ -65,9 +65,6 @@ const MovieDetails = () => {
         posterHorizontal: data?.posterHorizontal || { url: "" },
       };
 
-      console.log("Movie data:", safeMovie); // Add this line
-      console.log("Language value:", safeMovie.language); // Add this line
-
       setMovie(safeMovie);
     } catch (error) {
       console.error("Error fetching movie:", error);
@@ -167,7 +164,7 @@ const MovieDetails = () => {
 
   return (
     <div className="min-h-screen bg-dark relative">
-      {/* Blurred Background Image - Using Horizontal Poster */}
+      {/* Blurred Background Image - Using Horizontal Poster with 20% opacity */}
       {movie.posterHorizontal?.url && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
@@ -176,7 +173,7 @@ const MovieDetails = () => {
               backgroundImage: `url(${movie.posterHorizontal.url})`,
               filter: "blur(20px)",
               transform: "scale(1.1)",
-              opacity: "0.4", // Changed from 0.15 to 0.2 (20%)
+              opacity: "0.4",
             }}
           />
           <div className="absolute inset-0 bg-dark/50" />
@@ -265,9 +262,9 @@ const MovieDetails = () => {
                 </span>
               )}
 
-              {/* Language Display */}
-              {movie.language && (
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm">
+              {/* Language Display - This should show if language exists */}
+              {movie.language && movie.language.trim() !== "" && (
+                <span className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-sm">
                   {movie.language}
                 </span>
               )}

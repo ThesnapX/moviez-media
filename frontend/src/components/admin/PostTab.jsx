@@ -25,7 +25,7 @@ const PostTab = () => {
     duration: "",
     ageRating: "PG-13",
     quality: "HD",
-    language: "", // New language field
+    language: "",
     imdbRating: "",
     genres: [],
     downloadUrls: [
@@ -114,10 +114,37 @@ const PostTab = () => {
     reader.readAsDataURL(file);
   };
 
+  const prepareFormDataForSubmit = () => {
+    const dataToSubmit = JSON.parse(JSON.stringify(formData));
+
+    // Clean the language field - ensure it's a string
+    dataToSubmit.language = dataToSubmit.language
+      ? String(dataToSubmit.language).trim()
+      : "";
+
+    // Ensure downloadUrls have all required fields
+    dataToSubmit.downloadUrls = dataToSubmit.downloadUrls.map((url) => ({
+      episode: url.episode || "",
+      quality: url.quality || "1080p",
+      size: url.size || "",
+      sizeUnit: url.sizeUnit || "GB",
+      url: url.url || "",
+    }));
+
+    dataToSubmit.duration = dataToSubmit.duration || "";
+    dataToSubmit.ageRating = dataToSubmit.ageRating || "PG-13";
+    dataToSubmit.quality = dataToSubmit.quality || "HD";
+    dataToSubmit.imdbRating = dataToSubmit.imdbRating
+      ? parseFloat(dataToSubmit.imdbRating)
+      : null;
+    dataToSubmit.genres = dataToSubmit.genres || [];
+
+    return dataToSubmit;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate files for new posts
     if (!editingMovie) {
       if (!verticalPoster) {
         toast.error("Please select vertical poster");
@@ -134,7 +161,6 @@ const PostTab = () => {
     try {
       const submitData = new FormData();
 
-      // Append files
       if (verticalPoster) {
         submitData.append("posterVertical", verticalPoster);
       }
@@ -142,12 +168,8 @@ const PostTab = () => {
         submitData.append("posterHorizontal", horizontalPoster);
       }
 
-      // Debug: Check what's being saved
-      console.log("Saving download URLs:", formData.downloadUrls);
-      console.log("Language:", formData.language);
-
-      // Append form data as JSON string
-      submitData.append("data", JSON.stringify(formData));
+      const cleanData = prepareFormDataForSubmit();
+      submitData.append("data", JSON.stringify(cleanData));
 
       if (editingMovie) {
         await axios.put(
@@ -173,6 +195,7 @@ const PostTab = () => {
       resetForm();
       fetchData();
     } catch (error) {
+      console.error("Submit error:", error);
       toast.error(error.response?.data?.message || "Failed to save movie");
     } finally {
       setUploading(false);
@@ -202,7 +225,7 @@ const PostTab = () => {
       duration: "",
       ageRating: "PG-13",
       quality: "HD",
-      language: "", // Reset language field
+      language: "",
       imdbRating: "",
       genres: [],
       downloadUrls: [
@@ -228,9 +251,7 @@ const PostTab = () => {
   const openEditModal = (movie) => {
     setEditingMovie(movie);
 
-    // Format download URLs with proper size and unit separation
     const downloadUrls = movie.downloadUrls?.map((url) => {
-      // If the movie already has separate size and sizeUnit fields, use them
       if (url.sizeUnit) {
         return {
           ...url,
@@ -240,12 +261,10 @@ const PostTab = () => {
         };
       }
 
-      // For backward compatibility: parse size string if it contains unit
       let sizeValue = url.size || "";
-      let sizeUnit = "GB"; // default
+      let sizeUnit = "GB";
 
       if (url.size) {
-        // Extract unit from size string if it exists
         const unitMatch = url.size.match(/(MB|GB)$/i);
         if (unitMatch) {
           sizeUnit = unitMatch[0].toUpperCase();
@@ -270,25 +289,29 @@ const PostTab = () => {
     ];
 
     setFormData({
-      title: movie.title,
-      description: movie.description,
-      type: movie.type,
-      releaseDate: movie.releaseDate.split("T")[0],
+      title: movie.title || "",
+      description: movie.description || "",
+      type: movie.type || "movie",
+      releaseDate: movie.releaseDate ? movie.releaseDate.split("T")[0] : "",
       duration: movie.duration || "",
       ageRating: movie.ageRating || "PG-13",
       quality: movie.quality || "HD",
-      language: movie.language || "", // Set language from movie data
-      imdbRating: movie.imdbRating,
-      genres: movie.genres.map((g) => g._id || g),
+      language: movie.language || "",
+      imdbRating: movie.imdbRating || "",
+      genres: movie.genres ? movie.genres.map((g) => g._id || g) : [],
       downloadUrls,
-      spotlight: movie.spotlight,
+      spotlight: movie.spotlight || false,
     });
 
     setVerticalPreview(
-      `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical.url}`,
+      movie.posterVertical?.url
+        ? `${import.meta.env.VITE_BACKEND_URL}${movie.posterVertical.url}`
+        : "",
     );
     setHorizontalPreview(
-      `${import.meta.env.VITE_BACKEND_URL}${movie.posterHorizontal.url}`,
+      movie.posterHorizontal?.url
+        ? `${import.meta.env.VITE_BACKEND_URL}${movie.posterHorizontal.url}`
+        : "",
     );
     setShowModal(true);
   };
@@ -315,9 +338,7 @@ const PostTab = () => {
       [field]: value,
     };
 
-    // If updating size, make sure it's a clean number without units
     if (field === "size") {
-      // Remove any units that might have been typed
       const cleanSize = value.replace(/[^0-9.]/g, "");
       newUrls[index].size = cleanSize;
     }
@@ -361,7 +382,6 @@ const PostTab = () => {
               }}
             ></div>
             <div className="relative bg-[#1a1a1a] rounded-lg w-full max-w-3xl p-4 sm:p-6 border border-primary/20 max-h-[98vh] sm:max-h-[90vh] overflow-y-auto mt-16 sm:mt-0">
-              {/* Header with sticky on mobile */}
               <div className="sticky top-0 bg-[#1a1a1a] z-10 pb-2 mb-2 border-b border-primary/20">
                 <h3 className="text-lg sm:text-xl text-primary pr-8">
                   {editingMovie ? "Edit Post" : "Add New Post"}
@@ -379,7 +399,6 @@ const PostTab = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-                {/* Basic Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
@@ -414,7 +433,6 @@ const PostTab = () => {
                   </div>
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-secondary mb-1 text-sm sm:text-base">
                     Description <span className="text-primary">*</span>
@@ -430,8 +448,6 @@ const PostTab = () => {
                   />
                 </div>
 
-                {/* Date and Details */}
-                {/* Date and Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
@@ -519,7 +535,7 @@ const PostTab = () => {
                   </div>
                 </div>
 
-                {/* Language Field - Full width on its own row */}
+                {/* Language Field - Just like any other text field */}
                 <div className="w-full">
                   <label className="block text-secondary mb-1 text-sm sm:text-base">
                     Language
@@ -535,7 +551,6 @@ const PostTab = () => {
                   />
                 </div>
 
-                {/* IMDB Rating */}
                 <div>
                   <label className="block text-secondary mb-1 text-sm sm:text-base">
                     IMDB Rating (0-10)
@@ -547,19 +562,20 @@ const PostTab = () => {
                     max="10"
                     value={formData.imdbRating}
                     onChange={(e) => {
-                      const value = Math.min(
-                        10,
-                        Math.max(0, parseFloat(e.target.value) || 0),
-                      );
-                      setFormData({ ...formData, imdbRating: value });
+                      const val = e.target.value;
+
+                      if (val === "") {
+                        setFormData({ ...formData, imdbRating: "" });
+                      } else {
+                        const num = Math.min(10, Math.max(0, parseFloat(val)));
+                        setFormData({ ...formData, imdbRating: num });
+                      }
                     }}
                     className="w-full sm:w-1/2 bg-[#2a2a2a] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm sm:text-base"
                   />
                 </div>
 
-                {/* File Uploads */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {/* Vertical Poster */}
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Vertical Poster <span className="text-primary">*</span>
@@ -607,7 +623,6 @@ const PostTab = () => {
                     </div>
                   </div>
 
-                  {/* Horizontal Poster */}
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
                       Horizontal Poster <span className="text-primary">*</span>
@@ -658,7 +673,6 @@ const PostTab = () => {
                   </div>
                 </div>
 
-                {/* Genres */}
                 <div>
                   <label className="block text-secondary mb-2 text-sm sm:text-base">
                     Genres <span className="text-primary">*</span>
@@ -695,7 +709,6 @@ const PostTab = () => {
                   )}
                 </div>
 
-                {/* Download URLs */}
                 <div>
                   <label className="block text-secondary mb-2 text-sm sm:text-base">
                     Download URLs <span className="text-primary">*</span>
@@ -705,7 +718,6 @@ const PostTab = () => {
                       key={index}
                       className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-2"
                     >
-                      {/* Episode/Title Field - Only show for TV Series and Anime */}
                       {(formData.type === "tv-series" ||
                         formData.type === "anime") && (
                         <input
@@ -783,7 +795,6 @@ const PostTab = () => {
                   </button>
                 </div>
 
-                {/* Spotlight */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -802,7 +813,6 @@ const PostTab = () => {
                   </label>
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4 sm:mt-6">
                   <button
                     type="submit"
@@ -832,14 +842,12 @@ const PostTab = () => {
         </div>
       )}
 
-      {/* Movies List */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {movies.map((movie) => (
           <div
             key={movie._id}
             className="relative group overflow-hidden transition-all"
           >
-            {/* Poster Image */}
             <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
               <img
                 src={
@@ -850,10 +858,8 @@ const PostTab = () => {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               />
 
-              {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-              {/* Action Buttons */}
               <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <button
                   onClick={() => openEditModal(movie)}
@@ -871,7 +877,6 @@ const PostTab = () => {
                 </button>
               </div>
 
-              {/* Spotlight Badge */}
               {movie.spotlight && (
                 <div className="absolute top-2 left-2 z-10">
                   <span className="px-2 py-1 bg-primary/80 backdrop-blur-sm text-white text-xs rounded-full">
@@ -880,14 +885,12 @@ const PostTab = () => {
                 </div>
               )}
 
-              {/* Type Badge */}
               <div className="absolute bottom-2 left-2 z-10">
                 <span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full capitalize">
                   {movie.type.replace("-", " ")}
                 </span>
               </div>
 
-              {/* Rating Badge */}
               {movie.imdbRating && (
                 <div className="absolute bottom-2 right-2 z-10">
                   <span className="px-2 py-1 bg-yellow-500/80 backdrop-blur-sm text-white text-xs rounded-full flex items-center">
@@ -897,7 +900,6 @@ const PostTab = () => {
               )}
             </div>
 
-            {/* Title */}
             <div className="p-2">
               <h4 className="text-sm text-white truncate text-center">
                 {movie.title}
