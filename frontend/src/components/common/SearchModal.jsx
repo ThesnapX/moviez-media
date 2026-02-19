@@ -5,7 +5,6 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   ClockIcon,
-  FireIcon,
   FilmIcon,
   TvIcon,
   RocketLaunchIcon,
@@ -42,10 +41,9 @@ const SearchModal = () => {
   }, [searchQuery]);
 
   // Perform search when debounced query changes
-  // Perform search when debounced query changes
   useEffect(() => {
     if (debouncedQuery && debouncedQuery.length >= 2) {
-      performSearch(debouncedQuery, "modal"); // Add 'modal' source
+      performSearch(debouncedQuery, "modal");
     }
   }, [debouncedQuery, performSearch]);
 
@@ -136,7 +134,7 @@ const SearchModal = () => {
           )}
         </div>
 
-        {/* Search Content - No authentication checks needed */}
+        {/* Search Content */}
         <div className="max-h-[60vh] overflow-y-auto">
           {isSearching ? (
             <div className="flex justify-center py-8">
@@ -223,10 +221,9 @@ const SearchModal = () => {
               )}
             </div>
           ) : (
-            // Recent Searches & Suggestions
+            // Recent Searches Only (Popular Searches Removed)
             <div className="p-4">
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && (
+              {recentSearches.length > 0 ? (
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium text-secondary/80 flex items-center">
@@ -263,37 +260,12 @@ const SearchModal = () => {
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Popular Searches */}
-              <div>
-                <h4 className="text-sm font-medium text-secondary/80 flex items-center mb-3">
-                  <FireIcon className="w-4 h-4 mr-2" />
-                  Popular Searches
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Action",
-                    "Comedy",
-                    "Drama",
-                    "Horror",
-                    "Sci-Fi",
-                    "Anime",
-                    "Marvel",
-                    "DC",
-                    "Netflix",
-                    "Hindi",
-                  ].map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => setSearchQuery(term)}
-                      className="px-3 py-1 bg-[#2a2a2a] text-secondary rounded-full text-sm hover:bg-primary/20 hover:text-primary transition-colors"
-                    >
-                      {term}
-                    </button>
-                  ))}
+              ) : (
+                <div className="text-center py-8">
+                  <ClockIcon className="w-12 h-12 text-primary/30 mx-auto mb-3" />
+                  <p className="text-secondary/60">No recent searches</p>
                 </div>
-              </div>
+              )}
 
               {/* Search Tips */}
               <div className="mt-6 p-4 bg-[#2a2a2a] rounded-lg border border-primary/10">

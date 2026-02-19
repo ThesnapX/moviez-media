@@ -1,6 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import axios from "axios";
 
 const FilterSidebar = ({
   isOpen,
@@ -9,7 +10,31 @@ const FilterSidebar = ({
   setSelectedFilter,
   sortBy,
   setSortBy,
+  selectedGenre,
+  setSelectedGenre,
 }) => {
+  const [genres, setGenres] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchGenres();
+    }
+  }, [isOpen]);
+
+  const fetchGenres = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${backendUrl}/api/genres`);
+      setGenres(response.data);
+    } catch (error) {
+      console.error("Failed to fetch genres:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filters = [
     { id: "all", label: "All" },
     { id: "movie", label: "Movies" },
@@ -66,7 +91,7 @@ const FilterSidebar = ({
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                      {/* Filter Section */}
+                      {/* Filter by Type Section */}
                       <div>
                         <h3 className="text-sm font-medium text-secondary mb-3">
                           Filter by Type
@@ -89,6 +114,50 @@ const FilterSidebar = ({
                             </button>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Filter by Genre Section - NEW */}
+                      <div>
+                        <h3 className="text-sm font-medium text-secondary mb-3">
+                          Filter by Genre
+                        </h3>
+                        {loading ? (
+                          <div className="flex justify-center py-4">
+                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            <button
+                              onClick={() => {
+                                setSelectedGenre(null);
+                                onClose();
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                                !selectedGenre
+                                  ? "bg-primary text-white"
+                                  : "bg-[#2a2a2a] text-secondary hover:bg-primary/20 hover:text-primary"
+                              }`}
+                            >
+                              All Genres
+                            </button>
+                            {genres.map((genre) => (
+                              <button
+                                key={genre._id}
+                                onClick={() => {
+                                  setSelectedGenre(genre._id);
+                                  onClose();
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                                  selectedGenre === genre._id
+                                    ? "bg-primary text-white"
+                                    : "bg-[#2a2a2a] text-secondary hover:bg-primary/20 hover:text-primary"
+                                }`}
+                              >
+                                {genre.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Sort Section */}
@@ -122,11 +191,12 @@ const FilterSidebar = ({
                         onClick={() => {
                           setSelectedFilter("all");
                           setSortBy("relevance");
+                          setSelectedGenre(null);
                           onClose();
                         }}
                         className="w-full px-4 py-2 bg-[#2a2a2a] text-secondary rounded-lg hover:bg-[#3a3a3a] transition-colors text-sm"
                       >
-                        Reset Filters
+                        Reset All Filters
                       </button>
                     </div>
                   </div>
