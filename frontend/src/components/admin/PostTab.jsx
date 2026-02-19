@@ -27,7 +27,15 @@ const PostTab = () => {
     quality: "HD",
     imdbRating: "",
     genres: [],
-    downloadUrls: [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }],
+    downloadUrls: [
+      {
+        episode: "",
+        quality: "1080p",
+        size: "",
+        sizeUnit: "GB",
+        url: "",
+      },
+    ],
     spotlight: false,
   });
 
@@ -191,7 +199,15 @@ const PostTab = () => {
       quality: "HD",
       imdbRating: "",
       genres: [],
-      downloadUrls: [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }],
+      downloadUrls: [
+        {
+          episode: "",
+          quality: "1080p",
+          size: "",
+          sizeUnit: "GB",
+          url: "",
+        },
+      ],
       spotlight: false,
     });
     setVerticalPoster(null);
@@ -206,12 +222,21 @@ const PostTab = () => {
   const openEditModal = (movie) => {
     setEditingMovie(movie);
 
-    // Format download URLs with size unit
+    // Format download URLs with size unit and episode field
     const downloadUrls = movie.downloadUrls?.map((url) => ({
       ...url,
+      episode: url.episode || "",
       sizeUnit: url.size?.match(/[a-zA-Z]+$/)?.[0] || "GB",
       size: url.size?.replace(/[a-zA-Z]+$/, "") || "",
-    })) || [{ quality: "1080p", size: "", sizeUnit: "GB", url: "" }];
+    })) || [
+      {
+        episode: "",
+        quality: "1080p",
+        size: "",
+        sizeUnit: "GB",
+        url: "",
+      },
+    ];
 
     setFormData({
       title: movie.title,
@@ -240,7 +265,7 @@ const PostTab = () => {
       ...formData,
       downloadUrls: [
         ...formData.downloadUrls,
-        { quality: "1080p", size: "", sizeUnit: "GB", url: "" },
+        { episode: "", quality: "1080p", size: "", sizeUnit: "GB", url: "" },
       ],
     });
   };
@@ -281,7 +306,6 @@ const PostTab = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {/* Add/Edit Modal - Mobile Responsive */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-start sm:items-center justify-center min-h-screen p-2 sm:p-4">
@@ -311,7 +335,7 @@ const PostTab = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-                {/* Basic Info - Stack on mobile */}
+                {/* Basic Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
@@ -362,7 +386,7 @@ const PostTab = () => {
                   />
                 </div>
 
-                {/* Date and Details - Stack on mobile */}
+                {/* Date and Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-secondary mb-1 text-sm sm:text-base">
@@ -472,7 +496,7 @@ const PostTab = () => {
                   />
                 </div>
 
-                {/* File Uploads - Stack on mobile */}
+                {/* File Uploads */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Vertical Poster */}
                   <div>
@@ -610,7 +634,7 @@ const PostTab = () => {
                   )}
                 </div>
 
-                {/* Download URLs - Stack on mobile */}
+                {/* Download URLs */}
                 <div>
                   <label className="block text-secondary mb-2 text-sm sm:text-base">
                     Download URLs <span className="text-primary">*</span>
@@ -620,6 +644,19 @@ const PostTab = () => {
                       key={index}
                       className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-2"
                     >
+                      {/* Episode/Title Field - Only show for TV Series and Anime */}
+                      {(formData.type === "tv-series" ||
+                        formData.type === "anime") && (
+                        <input
+                          type="text"
+                          placeholder="Episode/Title"
+                          value={url.episode || ""}
+                          onChange={(e) =>
+                            updateDownloadUrl(index, "episode", e.target.value)
+                          }
+                          className="w-full sm:w-32 bg-[#2a2a2a] text-white px-2 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-primary/20 text-sm"
+                        />
+                      )}
                       <select
                         value={url.quality}
                         onChange={(e) =>
@@ -681,7 +718,7 @@ const PostTab = () => {
                     onClick={addDownloadUrl}
                     className="mt-2 text-primary hover:underline text-sm"
                   >
-                    + Add Another Quality
+                    + Add Another Download Link
                   </button>
                 </div>
 
@@ -704,7 +741,7 @@ const PostTab = () => {
                   </label>
                 </div>
 
-                {/* Form Actions - Stack on mobile */}
+                {/* Form Actions */}
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4 sm:mt-6">
                   <button
                     type="submit"

@@ -60,21 +60,17 @@ const MovieDetails = () => {
   };
 
   const checkIfSaved = () => {
-    // This would check if movie is in user's watchlist
-    // You can implement this based on your watchlist logic
     setIsSaved(false);
   };
 
   const getRecommendations = () => {
     if (!movie) return;
 
-    // Get recommendations based on movie type
     let sourceMovies = [];
     if (movie.type === "movie") sourceMovies = movies;
     else if (movie.type === "tv-series") sourceMovies = tvSeries;
     else if (movie.type === "anime") sourceMovies = anime;
 
-    // Filter out current movie and get random 6 recommendations
     const filtered = sourceMovies
       .filter((m) => m._id !== movie._id)
       .sort(() => 0.5 - Math.random())
@@ -148,6 +144,8 @@ const MovieDetails = () => {
       </div>
     );
   }
+
+  const isTvOrAnime = movie.type === "tv-series" || movie.type === "anime";
 
   return (
     <div className="min-h-screen bg-dark">
@@ -258,7 +256,7 @@ const MovieDetails = () => {
               )}
             </div>
 
-            {/* Download Buttons Section - Fixed */}
+            {/* Download Buttons Section */}
             {movie.downloadUrls && movie.downloadUrls.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-secondary mb-3">
@@ -272,9 +270,7 @@ const MovieDetails = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => {
-                          // Prevent any default behavior that might be intercepting
                           e.stopPropagation();
-                          // Force open in new tab
                           window.open(
                             download.url,
                             "_blank",
@@ -283,18 +279,26 @@ const MovieDetails = () => {
                         }}
                         className="group relative bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-sm border border-primary/30 rounded-xl px-4 py-2 hover:border-primary transition-all hover:scale-105 cursor-pointer"
                       >
-                        <div className="flex items-center space-x-2">
-                          <span className="font-bold text-primary">
-                            {download.quality}
-                          </span>
-                          {download.size && (
-                            <>
-                              <span className="text-white/20">|</span>
-                              <span className="text-xs text-secondary/60">
-                                {download.size}
-                              </span>
-                            </>
+                        <div className="flex flex-col items-center">
+                          {/* Show episode/title for TV/Anime */}
+                          {isTvOrAnime && download.episode && (
+                            <span className="text-xs text-white/80 mb-1">
+                              {download.episode}
+                            </span>
                           )}
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-primary">
+                              {download.quality}
+                            </span>
+                            {download.size && (
+                              <>
+                                <span className="text-white/20">|</span>
+                                <span className="text-xs text-secondary/60">
+                                  {download.size}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <div className="absolute inset-0 bg-primary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl"></div>
                       </a>
@@ -335,11 +339,11 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      {/* Recommendations and Popular Section - Two Column Layout */}
+      {/* Recommendations and Popular Section */}
       {(recommendations.length > 0 || popular.length > 0) && (
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Recommendations (takes 2 columns) */}
+            {/* Left Column - Recommendations */}
             {recommendations.length > 0 && (
               <div className="lg:col-span-2">
                 <h2 className="text-3xl font-['Bebas_Neue'] text-primary mb-6">
@@ -353,7 +357,7 @@ const MovieDetails = () => {
               </div>
             )}
 
-            {/* Right Column - Most Popular (takes 1 column) */}
+            {/* Right Column - Most Popular */}
             {popular.length > 0 && (
               <div className="lg:col-span-1">
                 <h2 className="text-2xl font-['Bebas_Neue'] text-primary mb-4">
@@ -366,12 +370,9 @@ const MovieDetails = () => {
                       to={`/movie/${item._id}`}
                       className="flex items-center space-x-3 p-2 bg-white/5 backdrop-blur-sm rounded-xl hover:bg-white/10 transition-all group"
                     >
-                      {/* Ranking */}
                       <span className="text-2xl font-bold text-primary/40 group-hover:text-primary/60 w-8 text-center">
                         #{index + 1}
                       </span>
-
-                      {/* Thumbnail */}
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                         <img
                           src={
@@ -382,8 +383,6 @@ const MovieDetails = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-
-                      {/* Title */}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
                           {item.title}
