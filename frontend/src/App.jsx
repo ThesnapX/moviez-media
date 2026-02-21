@@ -22,6 +22,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import MovieDetails from "./pages/MovieDetails";
 import RequestMovie from "./pages/RequestMovie";
 import Search from "./pages/Search";
+import GenrePage from "./pages/GenrePage";
 
 // Context
 import { AuthProvider } from "./context/AuthContext";
@@ -59,6 +60,8 @@ function App() {
                   <Route path="/movie/:id" element={<MovieDetails />} />
                   <Route path="/request-movie" element={<RequestMovie />} />
                   <Route path="/search" element={<Search />} />
+                  <Route path="/genre" element={<GenrePage />} />
+                  <Route path="/genre/:genreId" element={<GenrePage />} />
                 </Routes>
               </main>
 

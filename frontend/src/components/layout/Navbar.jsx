@@ -32,6 +32,7 @@ const Navbar = () => {
             </Link>
 
             {/* Navigation Links */}
+            {/* Navigation Links */}
             <div className="flex items-center space-x-6">
               <Link
                 to="/movies"
@@ -50,6 +51,12 @@ const Navbar = () => {
                 className="text-secondary hover:text-primary transition-colors"
               >
                 Anime
+              </Link>
+              <Link
+                to="/genre"
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                Genres
               </Link>
               <Link
                 to="/popular"

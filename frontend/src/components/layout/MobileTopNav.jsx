@@ -9,6 +9,7 @@ const MobileTopNav = () => {
     { path: "/movies", label: "Movies" },
     { path: "/tv-series", label: "TV Series" },
     { path: "/anime", label: "Anime" },
+    { path: "/genre", label: "Genres" },
     { path: "/popular", label: "Popular" },
     { path: "/request-movie", label: "Request Movie" },
   ];
