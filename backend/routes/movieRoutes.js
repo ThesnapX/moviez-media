@@ -44,9 +44,8 @@ router.get("/popular", async (req, res) => {
 // Get spotlight movies
 router.get("/spotlight", async (req, res) => {
   try {
-    const movies = await Movie.find({ spotlight: true })
-      .populate("genres")
-      .limit(5);
+    const movies = await Movie.find({ spotlight: true }).populate("genres");
+    // .limit(5);
 
     res.json(movies);
   } catch (error) {

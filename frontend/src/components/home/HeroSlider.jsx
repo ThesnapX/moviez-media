@@ -153,13 +153,26 @@ const HeroSlider = () => {
 
   const currentMovie = spotlight[currentSlide];
 
-  // FIXED: Get original image URL without any compression
-  const getOriginalImageUrl = (url) => {
+  // FIX 1: Get optimized image URL WITHOUT compression - preserve original quality
+  const getOptimizedImageUrl = (url) => {
     if (!url) return "";
 
-    // If it's a Cloudinary URL, remove any transformations
+    // If it's a Cloudinary URL, remove any quality parameters and fetch original
     if (url.includes("cloudinary")) {
-      // This removes any existing transformations and serves the original
+      // Remove any existing transformations to get the original image
+      // Use fl_lossy=false to prevent compression
+      return url.replace(/upload\/.*?\//, "upload/fl_lossy=false/");
+    }
+    return url;
+  };
+
+  // FIX 2: Get high-resolution image for background
+  const getHighResImageUrl = (url) => {
+    if (!url) return "";
+
+    // If it's a Cloudinary URL, get the original with no compression
+    if (url.includes("cloudinary")) {
+      // Remove all transformations, get original
       return url.replace(/upload\/.*?\//, "upload/");
     }
     return url;
@@ -212,11 +225,12 @@ const HeroSlider = () => {
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {/* HIGH QUALITY BACKGROUND IMAGES - NO COMPRESSION */}
+        {/* HIGH QUALITY BACKGROUND IMAGES - ALL SPOTLIGHT SLIDES */}
         {spotlight.map((movie, index) => {
           const imageUrl =
             movie?.posterHorizontal?.url || movie?.posterHorizontal;
-          const originalUrl = getOriginalImageUrl(imageUrl);
+          // Use high-res original image with no compression
+          const highResUrl = getHighResImageUrl(imageUrl);
 
           return (
             <div
@@ -226,26 +240,26 @@ const HeroSlider = () => {
             >
               {/* Background Image - Original Quality, No Compression */}
               <div className="absolute inset-0 overflow-hidden">
+                {/* Use img tag with original quality - no scaling filters */}
                 <img
                   ref={index === currentSlide ? imageRef : null}
-                  src={originalUrl}
+                  src={highResUrl}
                   alt={movie?.title}
                   className="w-full h-full object-cover object-center"
                   style={{
-                    // REMOVED brightness filter that was causing quality loss
-                    filter:
-                      isDragging && index === currentSlide
-                        ? `brightness(${1 - Math.abs(dragOffset) * 0.002})`
-                        : "none", // Changed from "brightness(0.9)" to "none"
+                    // Remove any filters that might reduce quality
+                    imageRendering: "high", // Use browser's default
+                    filter: "none", // No filters
+                    transform: "scale(1)", // No scaling during normal view
                   }}
                   onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.style.objectFit = "cover";
+                    // Fallback if image fails to load
+                    console.error("Image failed to load:", highResUrl);
                   }}
                 />
 
-                {/* Gradient Overlay - Now separate from image to preserve quality */}
-                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/70 to-transparent" />
+                {/* Gradient Overlay - Separate from image to maintain image quality */}
+                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/80 to-transparent" />
               </div>
 
               {/* Content */}
@@ -338,10 +352,10 @@ const HeroSlider = () => {
         ))}
       </div>
 
-      {/* COUNTER - Now shows correct total count */}
+      {/* COUNTER - Shows correct total number */}
       <div className="absolute top-6 right-6 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm z-20 border border-white/10">
         <span className="text-primary font-bold">{currentSlide + 1}</span> /{" "}
-        {spotlight.length}
+        <span className="text-white">{spotlight.length}</span>
       </div>
 
       {/* DRAG INDICATOR */}
