@@ -28,7 +28,7 @@ const HeroSlider = () => {
 
   const autoPlayRef = useRef(null);
   const containerRef = useRef(null);
-  const imageRefs = useRef([]);
+  const imageRef = useRef(null);
 
   // Check if current movie is in watchlist
   useEffect(() => {
@@ -62,8 +62,7 @@ const HeroSlider = () => {
 
   /* ================= SLIDE CONTROLS ================= */
   const changeSlide = (newIndex, dir) => {
-    if (isTransitioning || newIndex === currentSlide || spotlight.length === 0)
-      return;
+    if (isTransitioning || newIndex === currentSlide) return;
 
     setDirection(dir);
     setPrevSlide(currentSlide);
@@ -102,24 +101,15 @@ const HeroSlider = () => {
 
   const handleDragMove = (e) => {
     if (!isDragging) return;
-    e.preventDefault();
     const currentX = e.clientX || e.touches?.[0].clientX;
-    const diff = currentX - startX;
-    // Limit drag offset to prevent excessive movement
-    const maxOffset = window.innerWidth * 0.3;
-    const limitedDiff = Math.max(-maxOffset, Math.min(maxOffset, diff));
-    setDragOffset(limitedDiff);
+    setDragOffset(currentX - startX);
   };
 
   const handleDragEnd = () => {
     if (!isDragging) return;
 
     if (Math.abs(dragOffset) > 80) {
-      if (dragOffset > 0) {
-        prevSlideFn();
-      } else {
-        nextSlide();
-      }
+      dragOffset > 0 ? prevSlideFn() : nextSlide();
     }
 
     setIsDragging(false);
@@ -159,50 +149,41 @@ const HeroSlider = () => {
     }
   };
 
-  if (!spotlight || spotlight.length === 0) return null;
+  if (!spotlight.length) return null;
 
   const currentMovie = spotlight[currentSlide];
-  const totalSlides = spotlight.length;
 
-  // Get optimized image URL without compression
-  const getOptimizedImageUrl = (url) => {
+  // FIXED: Get original image URL without any compression
+  const getOriginalImageUrl = (url) => {
     if (!url) return "";
 
-    // If it's a Cloudinary URL, remove quality compression parameters
+    // If it's a Cloudinary URL, remove any transformations
     if (url.includes("cloudinary")) {
-      // Remove any quality parameters (q_auto, q_90, etc.) and fetch original
-      return url
-        .replace(/q_[a-zA-Z0-9_]+[,/]?/g, "")
-        .replace(/f_auto[,/]?/g, "");
+      // This removes any existing transformations and serves the original
+      return url.replace(/upload\/.*?\//, "upload/");
     }
     return url;
   };
 
   const getSlideStyle = (index) => {
-    // During drag
     if (isDragging && index === currentSlide) {
       return {
         transform: `translateX(${dragOffset}px)`,
         transition: "none",
-        zIndex: 10,
       };
     }
 
-    // Normal state - only current slide visible
     if (!isTransitioning) {
       return {
         transform:
           index === currentSlide ? "translateX(0)" : "translateX(100%)",
-        zIndex: index === currentSlide ? 10 : 1,
       };
     }
 
-    // During transition
     if (index === currentSlide) {
       return {
         transform: "translateX(0)",
         transition: "transform 500ms ease",
-        zIndex: 20,
       };
     }
 
@@ -211,14 +192,10 @@ const HeroSlider = () => {
         transform:
           direction === "next" ? "translateX(-100%)" : "translateX(100%)",
         transition: "transform 500ms ease",
-        zIndex: 15,
       };
     }
 
-    return {
-      transform: "translateX(100%)",
-      zIndex: 1,
-    };
+    return { transform: "translateX(100%)" };
   };
 
   return (
@@ -235,42 +212,39 @@ const HeroSlider = () => {
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {/* HIGH QUALITY BACKGROUND IMAGES - ALL SLIDES */}
+        {/* HIGH QUALITY BACKGROUND IMAGES - NO COMPRESSION */}
         {spotlight.map((movie, index) => {
           const imageUrl =
-            movie?.posterHorizontal?.url || movie?.posterHorizontal || "";
-          const optimizedUrl = getOptimizedImageUrl(imageUrl);
+            movie?.posterHorizontal?.url || movie?.posterHorizontal;
+          const originalUrl = getOriginalImageUrl(imageUrl);
 
           return (
             <div
-              key={movie._id || index}
+              key={index}
               className="absolute inset-0"
               style={getSlideStyle(index)}
             >
-              {/* Background Image - Original Quality */}
+              {/* Background Image - Original Quality, No Compression */}
               <div className="absolute inset-0 overflow-hidden">
                 <img
-                  ref={(el) => (imageRefs.current[index] = el)}
-                  src={optimizedUrl}
+                  ref={index === currentSlide ? imageRef : null}
+                  src={originalUrl}
                   alt={movie?.title}
                   className="w-full h-full object-cover object-center"
                   style={{
+                    // REMOVED brightness filter that was causing quality loss
                     filter:
                       isDragging && index === currentSlide
-                        ? `brightness(${1 - Math.abs(dragOffset) * 0.001})`
-                        : "brightness(0.95)",
-                    imageRendering: "high-quality", // Improve rendering quality
+                        ? `brightness(${1 - Math.abs(dragOffset) * 0.002})`
+                        : "none", // Changed from "brightness(0.9)" to "none"
                   }}
-                  loading={index === 0 ? "eager" : "lazy"}
                   onError={(e) => {
-                    // Fallback gradient if image fails to load
-                    e.target.style.display = "none";
-                    e.target.parentElement.style.background =
-                      "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)";
+                    e.target.onerror = null;
+                    e.target.style.objectFit = "cover";
                   }}
                 />
 
-                {/* Gradient Overlay - Separated from image to preserve quality */}
+                {/* Gradient Overlay - Now separate from image to preserve quality */}
                 <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-black/70 to-transparent" />
               </div>
 
@@ -291,14 +265,10 @@ const HeroSlider = () => {
                         {movie?.type?.replace("-", " ").toUpperCase()}
                       </span>
                       <span>•</span>
-                      <span>
-                        {movie?.releaseDate
-                          ? new Date(movie.releaseDate).getFullYear()
-                          : "N/A"}
-                      </span>
+                      <span>{new Date(movie?.releaseDate).getFullYear()}</span>
                       <span>•</span>
                       <span className="text-yellow-500">
-                        ★ {movie?.imdbRating || "N/A"}
+                        ★ {movie?.imdbRating}
                       </span>
                     </div>
 
@@ -335,59 +305,48 @@ const HeroSlider = () => {
         })}
       </div>
 
-      {/* ARROWS - Only show if more than 1 slide */}
-      {totalSlides > 1 && (
-        <>
+      {/* ARROWS */}
+      <button
+        onClick={prevSlideFn}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20 backdrop-blur-sm cursor-pointer"
+        disabled={isTransitioning}
+      >
+        <ChevronLeftIcon className="w-6 h-6 text-white" />
+      </button>
+
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-20 backdrop-blur-sm cursor-pointer"
+        disabled={isTransitioning}
+      >
+        <ChevronRightIcon className="w-6 h-6 text-white" />
+      </button>
+
+      {/* NAV DOTS - Now shows all slides dynamically */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+        {spotlight.map((_, index) => (
           <button
-            onClick={prevSlideFn}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-30 backdrop-blur-sm cursor-pointer"
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`transition-all duration-300 rounded-full cursor-pointer ${
+              index === currentSlide
+                ? "w-10 h-2.5 bg-primary shadow-lg shadow-primary/50"
+                : "w-2.5 h-2.5 bg-white/40 hover:bg-white"
+            }`}
             disabled={isTransitioning}
-            aria-label="Previous slide"
-          >
-            <ChevronLeftIcon className="w-6 h-6 text-white" />
-          </button>
+          />
+        ))}
+      </div>
 
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-primary p-3 rounded-full transition-all z-30 backdrop-blur-sm cursor-pointer"
-            disabled={isTransitioning}
-            aria-label="Next slide"
-          >
-            <ChevronRightIcon className="w-6 h-6 text-white" />
-          </button>
-        </>
-      )}
-
-      {/* NAV DOTS - Shows all slides count */}
-      {totalSlides > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-30">
-          {spotlight.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
-                index === currentSlide
-                  ? "w-10 h-2.5 bg-primary shadow-lg shadow-primary/50"
-                  : "w-2.5 h-2.5 bg-white/40 hover:bg-white"
-              }`}
-              disabled={isTransitioning}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* COUNTER - Shows current/total */}
-      {totalSlides > 1 && (
-        <div className="absolute top-6 right-6 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm z-30 border border-white/10">
-          <span className="text-primary font-bold">{currentSlide + 1}</span> /{" "}
-          {totalSlides}
-        </div>
-      )}
+      {/* COUNTER - Now shows correct total count */}
+      <div className="absolute top-6 right-6 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm z-20 border border-white/10">
+        <span className="text-primary font-bold">{currentSlide + 1}</span> /{" "}
+        {spotlight.length}
+      </div>
 
       {/* DRAG INDICATOR */}
       {isDragging && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm z-40 border border-white/10">
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm z-30 border border-white/10">
           {dragOffset > 0 ? "← Previous" : "Next →"}
         </div>
       )}
