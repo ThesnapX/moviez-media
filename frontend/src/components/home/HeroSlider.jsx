@@ -157,9 +157,9 @@ const HeroSlider = () => {
   const getOptimizedImageUrl = (url) => {
     if (!url) return "";
     // If it's a Cloudinary URL, add quality and format parameters
-    if (url.includes("cloudinary")) {
+    // if (url.includes("cloudinary")) {
       // Remove any existing transformations and add high quality
-      return url.replace(/upload\/.*?\//, "upload/q_90,f_auto/");
+      // return url.replace(/upload\/.*?\//, "upload/q_90,f_auto/");
     }
     return url;
   };
