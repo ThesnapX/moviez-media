@@ -4,6 +4,7 @@ import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useMovies } from "../../context/MovieContext";
+import gsap from "gsap";
 
 const MovieCard = ({ movie }) => {
   const { user } = useAuth();
@@ -12,19 +13,22 @@ const MovieCard = ({ movie }) => {
 
   const [isSaved, setIsSaved] = useState(false);
   const [popupPosition, setPopupPosition] = useState({
-    side: "right",
     top: 0,
+    left: 0,
     show: false,
+    placement: "center",
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const cardRef = useRef(null);
   const popupRef = useRef(null);
+  const popupInnerRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const popupWidth = 320;
   const popupHeight = 400;
   const isHoveringRef = useRef(false);
   const isHoveringPopupRef = useRef(false);
+  const animationRef = useRef(null);
 
   // Check if mobile on resize
   useEffect(() => {
@@ -45,9 +49,49 @@ const MovieCard = ({ movie }) => {
     }
   }, [user, movie, checkInWatchlist]);
 
+  // Animate popup when it shows
+  useEffect(() => {
+    if (popupPosition.show && popupInnerRef.current) {
+      // Kill any existing animations
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
+
+      const { placement } = popupPosition;
+
+      // Determine animation direction based on placement
+      let yFrom = 20;
+
+      if (placement.includes("bottom")) {
+        // If popup is below the card, slide up from bottom
+        yFrom = 20;
+      } else {
+        // Default - slide down from top
+        yFrom = -20;
+      }
+
+      // Create animation
+      animationRef.current = gsap.fromTo(
+        popupInnerRef.current,
+        {
+          opacity: 0,
+          y: yFrom,
+          scale: 0.95,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        },
+      );
+    }
+  }, [popupPosition.show, popupPosition.placement]);
+
   // Handle mouse enter on card (desktop only)
   const handleMouseEnter = () => {
-    if (isMobile) return; // Disable hover on mobile
+    if (isMobile) return;
     isHoveringRef.current = true;
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -55,36 +99,54 @@ const MovieCard = ({ movie }) => {
     calculatePosition();
   };
 
-  // Handle mouse leave on card (desktop only)
+  // Handle mouse leave on card
   const handleMouseLeave = () => {
-    if (isMobile) return; // Disable hover on mobile
+    if (isMobile) return;
     isHoveringRef.current = false;
     hoverTimeoutRef.current = setTimeout(() => {
       if (!isHoveringPopupRef.current) {
-        setPopupPosition((prev) => ({ ...prev, show: false }));
+        animateOut();
       }
     }, 100);
   };
 
-  // Handle mouse enter on popup (desktop only)
+  // Handle mouse enter on popup
   const handlePopupMouseEnter = () => {
-    if (isMobile) return; // Disable hover on mobile
+    if (isMobile) return;
     isHoveringPopupRef.current = true;
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
   };
 
-  // Handle mouse leave on popup (desktop only)
+  // Handle mouse leave on popup
   const handlePopupMouseLeave = () => {
-    if (isMobile) return; // Disable hover on mobile
+    if (isMobile) return;
     isHoveringPopupRef.current = false;
     if (!isHoveringRef.current) {
+      animateOut();
+    }
+  };
+
+  // Animate out function
+  const animateOut = () => {
+    if (popupInnerRef.current) {
+      gsap.to(popupInnerRef.current, {
+        opacity: 0,
+        y: popupPosition.placement.includes("bottom") ? 20 : -20,
+        scale: 0.95,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => {
+          setPopupPosition((prev) => ({ ...prev, show: false }));
+        },
+      });
+    } else {
       setPopupPosition((prev) => ({ ...prev, show: false }));
     }
   };
 
-  // Handle card click - navigate to details page (mobile and desktop)
+  // Handle card click
   const handleCardClick = () => {
     navigate(`/movie/${movie._id}`);
   };
@@ -92,11 +154,7 @@ const MovieCard = ({ movie }) => {
   // Handle save/unsave
   const handleSaveToggle = async (e) => {
     e.stopPropagation();
-
-    if (!user) {
-      // You might want to show login modal here
-      return;
-    }
+    if (!user) return;
 
     if (isSaved) {
       const success = await removeFromWatchlist(movie._id);
@@ -107,7 +165,7 @@ const MovieCard = ({ movie }) => {
     }
   };
 
-  // Calculate popup position based on viewport
+  // Calculate popup position - top-left corner at card center
   const calculatePosition = () => {
     if (!cardRef.current || !isHoveringRef.current || isMobile) return;
 
@@ -115,34 +173,59 @@ const MovieCard = ({ movie }) => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    const spaceOnRight = viewportWidth - cardRect.right;
-    const spaceOnLeft = cardRect.left;
+    // Card center coordinates
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
 
-    const side = spaceOnRight >= popupWidth ? "right" : "left";
+    // Default: position popup so its top-left corner is at card center
+    let left = cardCenterX;
+    let top = cardCenterY;
+    let placement = "center";
 
-    let top = cardRect.top + cardRect.height / 2 - popupHeight / 2;
+    // Check if popup would overflow on the right
+    if (left + popupWidth > viewportWidth) {
+      // Position popup so its top-right corner is at card center
+      left = cardCenterX - popupWidth;
+      placement = "right";
+    }
 
+    // Check if popup would overflow on the left
+    if (left < 0) {
+      left = Math.max(0, cardCenterX);
+      placement = "left";
+    }
+
+    // Check if popup would overflow on the bottom
     if (top + popupHeight > viewportHeight) {
-      top = viewportHeight - popupHeight - 10;
+      // Position popup so its bottom-left corner is at card center
+      top = cardCenterY - popupHeight;
+      placement = placement === "center" ? "bottom" : placement + "-bottom";
     }
 
-    if (top < 10) {
-      top = 10;
+    // Check if popup would overflow on the top
+    if (top < 0) {
+      top = Math.max(0, cardCenterY);
+      placement = placement === "center" ? "top" : placement + "-top";
     }
+
+    // Final safety checks - ensure popup stays within viewport
+    left = Math.max(8, Math.min(left, viewportWidth - popupWidth - 8));
+    top = Math.max(8, Math.min(top, viewportHeight - popupHeight - 8));
 
     setPopupPosition({
-      side,
       top,
+      left,
       show: true,
+      placement,
     });
   };
 
-  // Handle scroll - hide popup when scrolling
+  // Handle scroll
   useEffect(() => {
     const handleScroll = () => {
       if (popupPosition.show && !isMobile) {
         if (!isHoveringRef.current && !isHoveringPopupRef.current) {
-          setPopupPosition((prev) => ({ ...prev, show: false }));
+          animateOut();
         } else {
           calculatePosition();
         }
@@ -151,16 +234,12 @@ const MovieCard = ({ movie }) => {
 
     window.addEventListener("scroll", handleScroll, true);
     return () => window.removeEventListener("scroll", handleScroll, true);
-  }, [popupPosition.show, isMobile]);
+  }, [popupPosition.show, isMobile, popupPosition.placement]);
 
   // Handle resize
   useEffect(() => {
     const handleResize = () => {
-      if (
-        popupPosition.show &&
-        !isMobile &&
-        (isHoveringRef.current || isHoveringPopupRef.current)
-      ) {
+      if (popupPosition.show && !isMobile && isHoveringRef.current) {
         calculatePosition();
       }
     };
@@ -178,7 +257,7 @@ const MovieCard = ({ movie }) => {
         cardRef.current &&
         !cardRef.current.contains(event.target)
       ) {
-        setPopupPosition((prev) => ({ ...prev, show: false }));
+        animateOut();
         isHoveringRef.current = false;
         isHoveringPopupRef.current = false;
       }
@@ -186,21 +265,19 @@ const MovieCard = ({ movie }) => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [popupPosition.placement]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
     };
   }, []);
-
-  // Get transform origin based on side
-  const getTransformOrigin = () => {
-    return popupPosition.side === "right" ? "left" : "right";
-  };
 
   return (
     <div
@@ -209,7 +286,7 @@ const MovieCard = ({ movie }) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Thumbnail - Make it clickable */}
+      {/* Thumbnail */}
       <div
         className="relative overflow-hidden rounded-lg cursor-pointer"
         onClick={handleCardClick}
@@ -227,7 +304,7 @@ const MovieCard = ({ movie }) => {
           }}
         />
 
-        {/* Hover overlay - only show on desktop when popup is visible */}
+        {/* Hover overlay */}
         {!isMobile && (
           <div
             className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 ${
@@ -243,7 +320,7 @@ const MovieCard = ({ movie }) => {
           </div>
         )}
 
-        {/* Watchlist indicator on thumbnail */}
+        {/* Watchlist indicator */}
         {isSaved && (
           <div className="absolute top-2 right-2 z-10">
             <BookmarkSolid className="w-5 h-5 text-primary" />
@@ -256,37 +333,30 @@ const MovieCard = ({ movie }) => {
         {movie.title}
       </h3>
 
-      {/* Popup - Only show on desktop */}
+      {/* Popup - Positioned with top-left corner at card center */}
       {!isMobile && popupPosition.show && (
         <div
           ref={popupRef}
           className="fixed z-50"
           style={{
-            left:
-              popupPosition.side === "right"
-                ? cardRef.current?.getBoundingClientRect().right + 16
-                : cardRef.current?.getBoundingClientRect().left -
-                  popupWidth -
-                  16,
+            left: popupPosition.left,
             top: popupPosition.top,
             width: popupWidth,
           }}
           onMouseEnter={handlePopupMouseEnter}
           onMouseLeave={handlePopupMouseLeave}
         >
-          {/* Popup card */}
           <div
-            className="transform transition-all duration-200 ease-out"
+            ref={popupInnerRef}
+            className="transform"
             style={{
-              transform: "scale(1) translateY(0)",
-              opacity: 1,
-              transformOrigin: getTransformOrigin(),
+              opacity: 0,
             }}
           >
             <div className="relative">
               {/* Glassmorphism card */}
               <div className="bg-gradient-to-br from-white/10 to-transparent backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                {/* Poster with gradient overlay */}
+                {/* Poster */}
                 <div className="relative h-40 overflow-hidden">
                   <img
                     src={
@@ -297,15 +367,11 @@ const MovieCard = ({ movie }) => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-
-                  {/* Title overlay */}
                   <div className="absolute bottom-2 left-3 right-3">
                     <h4 className="text-lg font-bold text-white truncate drop-shadow-lg">
                       {movie.title}
                     </h4>
                   </div>
-
-                  {/* Watchlist indicator on popup poster */}
                   {isSaved && (
                     <div className="absolute top-2 right-2">
                       <BookmarkSolid className="w-5 h-5 text-primary drop-shadow-lg" />
@@ -341,7 +407,7 @@ const MovieCard = ({ movie }) => {
                   </p>
 
                   {/* Genres */}
-                  {movie.genres && movie.genres.length > 0 && (
+                  {movie.genres?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
                       {movie.genres.slice(0, 3).map((genre) => (
                         <span
@@ -367,14 +433,10 @@ const MovieCard = ({ movie }) => {
                     >
                       Download
                     </button>
-
                     {user && (
                       <button
                         onClick={handleSaveToggle}
                         className="p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all"
-                        title={
-                          isSaved ? "Remove from watchlist" : "Add to watchlist"
-                        }
                       >
                         {isSaved ? (
                           <BookmarkSolid className="w-5 h-5" />
@@ -384,38 +446,8 @@ const MovieCard = ({ movie }) => {
                       </button>
                     )}
                   </div>
-
-                  {/* Additional info for TV shows */}
-                  {movie.type === "tv-series" && movie.seasons && (
-                    <div className="mt-3 text-xs text-white/40 flex items-center space-x-2">
-                      <span>
-                        {movie.seasons} Season{movie.seasons > 1 ? "s" : ""}
-                      </span>
-                      <span>•</span>
-                      <span>{movie.quality || "HD"}</span>
-                      <span>•</span>
-                      <span>{movie.episodes || "24"} Ep</span>
-                      <span>•</span>
-                      <span>{movie.status || "Ongoing"}</span>
-                    </div>
-                  )}
                 </div>
               </div>
-
-              {/* Arrow pointer */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-xl border-t border-l border-white/10 transform rotate-45 ${
-                  popupPosition.side === "right" ? "-left-1.5" : "-right-1.5"
-                }`}
-                style={{
-                  [popupPosition.side === "right"
-                    ? "borderRight"
-                    : "borderLeft"]: "none",
-                  [popupPosition.side === "right"
-                    ? "borderBottom"
-                    : "borderTop"]: "none",
-                }}
-              />
             </div>
           </div>
         </div>

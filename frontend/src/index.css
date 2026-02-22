@@ -214,3 +214,48 @@ h6 {
   letter-spacing: 0.02em; /* Tighter tracking */
   font-weight: 400; /* Normal weight */
 }
+
+/* Wipe down animation - for popups above the card */
+@keyframes wipeDown {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+    clip-path: inset(0 0 100% 0);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.02) translateY(2px);
+    clip-path: inset(0 0 30% 0);
+  }
+  70% {
+    clip-path: inset(0 0 10% 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Wipe DOWN animation - for popups ABOVE the card */
+/* Content wipes in from top to bottom */
+@keyframes wipeDown {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+    clip-path: inset(0 0 100% 0); /* Start: completely hidden (bottom to top) */
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.02) translateY(2px);
+    clip-path: inset(0 0 30% 0); /* 70% visible from top */
+  }
+  70% {
+    clip-path: inset(0 0 10% 0); /* 90% visible from top */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    clip-path: inset(0 0 0 0); /* Fully visible */
+  }
+}
